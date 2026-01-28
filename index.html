@@ -36,7 +36,8 @@
       SUPABASE_URL,
       SUPABASE_KEY
     );
-
+    const today = new Date()
+    const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1)
     const calendar = new FullCalendar.Calendar(
       document.getElementById('calendar'),
       {
@@ -54,6 +55,7 @@
 
 </body>
 </html>
+
 
 
 
