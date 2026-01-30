@@ -63,6 +63,9 @@
           hour12: false
           },
         selectable: true,
+        select: function(info) {
+          console.log('Horario seleccionado:', info.start, info.end);
+          }
 
         dateClick: function(info) {
           calendar.changeView('timeGridDay', info.date);
