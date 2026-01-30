@@ -60,25 +60,28 @@
           hour12: false
           },
         selectable: true,
-        select: function(info) {
-        // borrar eventos anteriores
-        calendar.getEvents().forEach(event => event.remove());
-
-        // agregar el nuevo horario seleccionado
-        calendar.addEvent({
-          start: info.start,
-          end: info.end,
-          backgroundColor: '#2ecc71',
-          borderColor: '#27ae60'
-        });
-
-        // quitar selección temporal
-        calendar.unselect();
-        },
-
         dateClick: function(info) {
+          // solo permitir en vista diaria
+          if (calendar.view.type !== 'timeGridDay') {
           calendar.changeView('timeGridDay', info.date);
-        }
+          return;
+          }
+
+          // borrar eventos anteriores
+          calendar.getEvents().forEach(e => e.remove());
+
+          // calcular 30 minutos
+          const start = info.date;
+          const end = new Date(start.getTime() + 30 * 60000);
+
+          // crear evento fijo
+          calendar.addEvent({
+            start,
+            end,
+            backgroundColor: '#2ecc71',
+            borderColor: '#27ae60'
+            });
+          }
       }
     );
     calendar.render();
@@ -89,6 +92,7 @@
 
 </body>
 </html>
+
 
 
 
