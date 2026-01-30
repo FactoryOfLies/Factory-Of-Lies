@@ -61,13 +61,21 @@
           },
         selectable: true,
         select: function(info) {
-          calendar.addEvent({
-            start: info.start,
-            end: info.end,
-            backgroundColor: '#2ecc71',
-            borderColor: '#27ae60',
-            display: 'block'
-  });
+        // borrar eventos anteriores
+        calendar.getEvents().forEach(event => event.remove());
+
+        // agregar el nuevo horario seleccionado
+        calendar.addEvent({
+          start: info.start,
+          end: info.end,
+          backgroundColor: '#2ecc71',
+          borderColor: '#27ae60'
+        });
+
+        // quitar selección temporal
+        calendar.unselect();
+        },
+
 
   calendar.unselect(); // limpia la selección temporal
 },
@@ -85,6 +93,7 @@
 
 </body>
 </html>
+
 
 
 
