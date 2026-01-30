@@ -64,8 +64,16 @@
           },
         selectable: true,
         select: function(info) {
-          console.log('Horario seleccionado:', info.start, info.end);
-          },
+          calendar.addEvent({
+            start: info.start,
+            end: info.end,
+            backgroundColor: '#2ecc71',
+            borderColor: '#27ae60',
+            display: 'block'
+  });
+
+  calendar.unselect(); // limpia la selección temporal
+},
 
         dateClick: function(info) {
           calendar.changeView('timeGridDay', info.date);
@@ -80,6 +88,7 @@
 
 </body>
 </html>
+
 
 
 
