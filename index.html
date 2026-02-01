@@ -93,6 +93,12 @@
             } else {
               btn.style.display = 'none';
               }
+            eventDidMount: function(info) {
+              const dayCell = info.el.closest('.fc-daygrid-day');
+              if (dayCell) {
+                dayCell.classList.add('has-event');
+                }
+            },
 },
       }
     );
@@ -106,6 +112,7 @@
 <button id="saveBtn">OK</button>
 </body>
 </html>
+
 
 
 
