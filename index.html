@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>Agenda</title>
 
-  <!-- FullCalendar -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css">
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
 
@@ -34,7 +33,6 @@
       font-weight: 600;
     }
 
-    /* Día en verde si tiene horarios */
     .fc-daygrid-day.has-event {
       background-color: rgba(39, 174, 96, 0.55);
     }
@@ -53,6 +51,7 @@
 document.addEventListener('DOMContentLoaded', function () {
 
   let justCreatedEvent = null;
+  let activeDay = null; // 👈 día que se está editando
 
   const calendar = new FullCalendar.Calendar(
     document.getElementById('calendar'),
@@ -65,13 +64,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
       dateClick: function(info) {
 
-        // Si estamos en mes → ir a día
+        // cambiar de mes a día
         if (calendar.view.type !== 'timeGridDay') {
+          activeDay = info.date; // 👈 guardar día activo
           calendar.changeView('timeGridDay', info.date);
           return;
         }
 
-        // Crear franja de 30 minutos
         const start = info.date;
         const end = new Date(start.getTime() + 30 * 60000);
 
@@ -82,7 +81,6 @@ document.addEventListener('DOMContentLoaded', function () {
           borderColor: '#1e8449'
         });
 
-        // Fix móvil (evita autodestrucción)
         justCreatedEvent = event;
         setTimeout(() => {
           justCreatedEvent = null;
@@ -118,13 +116,26 @@ document.addEventListener('DOMContentLoaded', function () {
 
   calendar.render();
 
-  // BOTÓN OK → guarda (no borra nada) y vuelve al mes
+  // ✅ OK → guardar (no borrar nada)
   document.getElementById('saveBtn').addEventListener('click', () => {
+    activeDay = null;
     calendar.changeView('dayGridMonth');
   });
 
-  // BOTÓN REGRESAR → NO guarda, solo vuelve
+  // ❌ REGRESAR → borrar eventos del día activo
   document.getElementById('backBtn').addEventListener('click', () => {
+
+    if (activeDay) {
+      calendar.getEvents().forEach(event => {
+        if (
+          event.start.toDateString() === activeDay.toDateString()
+        ) {
+          event.remove();
+        }
+      });
+    }
+
+    activeDay = null;
     calendar.changeView('dayGridMonth');
   });
 
@@ -133,6 +144,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </body>
 </html>
+
+
 
 
 
