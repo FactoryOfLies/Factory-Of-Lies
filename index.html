@@ -81,7 +81,16 @@
           },
           eventClick: function(info) {
             info.event.remove();
-          }
+          },
+          datesSet: function(info) {
+            const btn = document.getElementById('saveBtn');
+
+            if (info.view.type === 'timeGridDay') {
+            btn.style.display = 'inline-block';
+            } else {
+              btn.style.display = 'none';
+              }
+},
       }
     );
     calendar.render();
@@ -92,6 +101,7 @@
 <button id="saveBtn">OK</button>
 </body>
 </html>
+
 
 
 
