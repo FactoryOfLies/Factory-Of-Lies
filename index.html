@@ -84,10 +84,16 @@ document.addEventListener('DOMContentLoaded', function () {
       },
 
       datesSet: function(info) {
-        const btn = document.getElementById('saveBtn');
-        btn.style.display = info.view.type === 'timeGridDay'
-          ? 'inline-block'
-          : 'none';
+        const saveBtn = document.getElementById('saveBtn');
+        const backBtn = document.getElementById('backBtn');
+
+        if (info.view.type === 'timeGridDay') {
+          saveBtn.style.display = 'inline-block';
+          backBtn.style.display = 'inline-block';
+        } else {
+          saveBtn.style.display = 'none';
+          backBtn.style.display = 'none';
+        }
       },
 
       eventDidMount: function(info) {
@@ -110,6 +116,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </body>
 </html>
+
 
 
 
