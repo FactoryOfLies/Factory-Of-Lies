@@ -1,9 +1,10 @@
-+<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <title>Agenda</title>
 
+  <!-- FullCalendar -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css">
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
 
@@ -12,18 +13,28 @@
       font-family: Arial, sans-serif;
       padding: 20px;
     }
+
     #calendar {
       max-width: 900px;
       margin: auto;
     }
-    #saveBtn {
+
+    #saveBtn,
+    #backBtn {
       display: none;
+      margin: 10px 5px;
+      padding: 8px 14px;
+      font-size: 16px;
+      cursor: pointer;
     }
+
     .fc .fc-timegrid-slot-label *,
     .fc .fc-timegrid-axis-cushion {
       font-size: 20px;
       font-weight: 600;
     }
+
+    /* Día en verde si tiene horarios */
     .fc-daygrid-day.has-event {
       background-color: rgba(39, 174, 96, 0.55);
     }
@@ -32,16 +43,16 @@
 <body>
 
 <h2>Selecciona un horario disponible</h2>
-<div id="calendar"></div>
-<button id="backBtn" style="display:none;">Regresar</button>
-<button id="saveBtn">OK</button>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<div id="calendar"></div>
+
+<button id="backBtn">Regresar</button>
+<button id="saveBtn">OK</button>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-  let justCreatedEvent = null; 
+  let justCreatedEvent = null;
 
   const calendar = new FullCalendar.Calendar(
     document.getElementById('calendar'),
@@ -54,12 +65,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
       dateClick: function(info) {
 
-        // cambiar de mes a día
+        // Si estamos en mes → ir a día
         if (calendar.view.type !== 'timeGridDay') {
           calendar.changeView('timeGridDay', info.date);
           return;
         }
 
+        // Crear franja de 30 minutos
         const start = info.date;
         const end = new Date(start.getTime() + 30 * 60000);
 
@@ -70,15 +82,14 @@ document.addEventListener('DOMContentLoaded', function () {
           borderColor: '#1e8449'
         });
 
+        // Fix móvil (evita autodestrucción)
         justCreatedEvent = event;
-
         setTimeout(() => {
           justCreatedEvent = null;
         }, 300);
       },
 
       eventClick: function(info) {
-        // 🔒 fix móvil
         if (info.event === justCreatedEvent) return;
         info.event.remove();
       },
@@ -106,22 +117,22 @@ document.addEventListener('DOMContentLoaded', function () {
   );
 
   calendar.render();
-  calendar.changeView('dayGridMonth');
-});
+
+  // BOTÓN OK → guarda (no borra nada) y vuelve al mes
   document.getElementById('saveBtn').addEventListener('click', () => {
     calendar.changeView('dayGridMonth');
   });
-document.getElementById('backBtn').addEventListener('click', () => {
-  calendar.changeView('dayGridMonth');
-});
+
+  // BOTÓN REGRESAR → NO guarda, solo vuelve
+  document.getElementById('backBtn').addEventListener('click', () => {
+    calendar.changeView('dayGridMonth');
+  });
+
 });
 </script>
 
 </body>
 </html>
-
-
-
 
 
 
