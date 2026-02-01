@@ -108,29 +108,21 @@ document.addEventListener('DOMContentLoaded', function () {
   calendar.render();
   
   document.getElementById('backBtn').addEventListener('click', () => {
-  const currentDate = calendar.getDate();
-
-  // borrar SOLO los eventos del día actual
-  calendar.getEvents().forEach(event => {
-    if (
-      event.start.toDateString() === currentDate.toDateString()
-    ) {
-      event.remove();
-    }
-  });
-
   // volver al mes
   calendar.changeView('dayGridMonth');
 });
   document.getElementById('saveBtn').addEventListener('click', () => {
     calendar.changeView('dayGridMonth');
   });
-
+document.getElementById('backBtn').addEventListener('click', () => {
+  calendar.changeView('dayGridMonth');
+});
 });
 </script>
 
 </body>
 </html>
+
 
 
 
