@@ -4,13 +4,11 @@
   <meta charset="UTF-8">
   <title>Agenda</title>
 
-  <!-- FullCalendar -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css">
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-  
+
   <style>
     body {
-      let justCreatedEvent = null;
       font-family: Arial, sans-serif;
       padding: 20px;
     }
@@ -20,124 +18,97 @@
     }
     #saveBtn {
       display: none;
-      }
+    }
     .fc .fc-timegrid-slot-label *,
     .fc .fc-timegrid-axis-cushion {
       font-size: 20px;
       font-weight: 600;
     }
-    
     .fc-daygrid-day.has-event {
-      background-color: rgba(46, 204, 113, 0.45);
-      }
+      background-color: rgba(39, 174, 96, 0.55);
+    }
   </style>
 </head>
 <body>
 
 <h2>Selecciona un horario disponible</h2>
 <div id="calendar"></div>
+<button id="saveBtn">OK</button>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function () {
 
-    const SUPABASE_URL = "https://ozteuislgcnuloivagyn.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_9mcuWT1vNqROGBNCJgQblg_0Pn3OrVA";
+  let justCreatedEvent = null; // ✅ AQUÍ VA
 
-    const supabase = window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_KEY
-    );
-    const today = new Date()
-    const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1)
-    const calendar = new FullCalendar.Calendar(
-      document.getElementById('calendar'),
-      {
-        initialView: 'dayGridMonth',
-        initialDate: nextMonth,
+  const calendar = new FullCalendar.Calendar(
+    document.getElementById('calendar'),
+    {
+      initialView: 'dayGridMonth',
 
-        slotMinTime: '07:00:00',
-        slotMaxTime: '23:00:00',
-        slotDuration: '00:30:00',
-        slotLabelInterval: '00:30:00',
-        slotLabelFormat: {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false
-          },
-        dateClick: function(info) {
-          // ir a vista diaria si estamos en mes
-          if (calendar.view.type !== 'timeGridDay') {
-            calendar.changeView('timeGridDay', info.date);
-            return;
-          }
+      slotMinTime: '07:00:00',
+      slotMaxTime: '23:00:00',
+      slotDuration: '00:30:00',
 
-          const start = info.date;
-          const end = new Date(start.getTime() + 30 * 60000);
+      dateClick: function(info) {
 
-          const event = calendar.addEvent({
-            start,
-            end,
-            backgroundColor: '#27ae60',
-            borderColor: '#1e8449'
-            });
+        // cambiar de mes a día
+        if (calendar.view.type !== 'timeGridDay') {
+          calendar.changeView('timeGridDay', info.date);
+          return;
+        }
 
-            // marcar evento recién creado
-            justCreatedEvent = event;
+        const start = info.date;
+        const end = new Date(start.getTime() + 30 * 60000);
 
-            // liberar el bloqueo después de un momento
-            setTimeout(() => {
-              justCreatedEvent = null;
-            }, 300);
-          }
-          // calcular 30 minutos
-          const start = info.date;
-          const end = new Date(start.getTime() + 30 * 60000);
+        const event = calendar.addEvent({
+          start,
+          end,
+          backgroundColor: '#27ae60',
+          borderColor: '#1e8449'
+        });
 
-          // crear evento fijo
-          calendar.addEvent({
-            start,
-            end,
-            backgroundColor: '#2ecc71',
-            borderColor: '#27ae60'
-            });
-          },
-          eventClick: function(info) {
-            // evitar borrar el evento recién creado (mobile fix)
-            if (info.event === justCreatedEvent) return;
+        justCreatedEvent = event;
 
-            info.event.remove();
-          }
-          datesSet: function(info) {
-            const btn = document.getElementById('saveBtn');
+        setTimeout(() => {
+          justCreatedEvent = null;
+        }, 300);
+      },
 
-            if (info.view.type === 'timeGridDay') {
-            btn.style.display = 'inline-block';
-            } else {
-              btn.style.display = 'none';
-              }
-            },
-          eventDidMount: function(info) {
-              const dayCell = info.el.closest('.fc-daygrid-day');
-              if (dayCell) {
-                dayCell.classList.add('has-event');
-                }
-            },
+      eventClick: function(info) {
+        // 🔒 fix móvil
+        if (info.event === justCreatedEvent) return;
+        info.event.remove();
+      },
+
+      datesSet: function(info) {
+        const btn = document.getElementById('saveBtn');
+        btn.style.display = info.view.type === 'timeGridDay'
+          ? 'inline-block'
+          : 'none';
+      },
+
+      eventDidMount: function(info) {
+        const dayCell = info.el.closest('.fc-daygrid-day');
+        if (dayCell) {
+          dayCell.classList.add('has-event');
+        }
       }
-    );
-    calendar.render();
-      document.getElementById('saveBtn').addEventListener('click', () => {
-        calendar.changeView('dayGridMonth');
-});
-    console.log("Supabase conectado:", supabase);
+    }
+  );
+
+  calendar.render();
+
+  document.getElementById('saveBtn').addEventListener('click', () => {
+    calendar.changeView('dayGridMonth');
   });
+
+});
 </script>
-<button id="saveBtn">OK</button>
+
 </body>
 </html>
-
-
 
 
 
