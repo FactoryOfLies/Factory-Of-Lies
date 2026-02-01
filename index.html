@@ -24,6 +24,8 @@
     .fc .fc-timegrid-axis-cushion {
       font-size: 20px;
       font-weight: 600;
+    }
+    
     .fc-daygrid-day.has-event {
       background-color: rgba(46, 204, 113, 0.25);
       }
@@ -93,13 +95,13 @@
             } else {
               btn.style.display = 'none';
               }
-            eventDidMount: function(info) {
+            },
+          eventDidMount: function(info) {
               const dayCell = info.el.closest('.fc-daygrid-day');
               if (dayCell) {
                 dayCell.classList.add('has-event');
                 }
             },
-},
       }
     );
     calendar.render();
@@ -112,6 +114,7 @@
 <button id="saveBtn">OK</button>
 </body>
 </html>
+
 
 
 
