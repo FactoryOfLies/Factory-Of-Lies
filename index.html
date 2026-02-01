@@ -7,9 +7,10 @@
   <!-- FullCalendar -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css">
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-
+  
   <style>
     body {
+      let justCreatedEvent = null;
       font-family: Arial, sans-serif;
       padding: 20px;
     }
@@ -66,10 +67,29 @@
           hour12: false
           },
         dateClick: function(info) {
-          // solo permitir en vista diaria
+          // ir a vista diaria si estamos en mes
           if (calendar.view.type !== 'timeGridDay') {
-          calendar.changeView('timeGridDay', info.date);
-          return;
+            calendar.changeView('timeGridDay', info.date);
+            return;
+          }
+
+          const start = info.date;
+          const end = new Date(start.getTime() + 30 * 60000);
+
+          const event = calendar.addEvent({
+            start,
+            end,
+            backgroundColor: '#27ae60',
+            borderColor: '#1e8449'
+            });
+
+            // marcar evento recién creado
+            justCreatedEvent = event;
+
+            // liberar el bloqueo después de un momento
+            setTimeout(() => {
+              justCreatedEvent = null;
+            }, 300);
           }
           // calcular 30 minutos
           const start = info.date;
@@ -84,8 +104,11 @@
             });
           },
           eventClick: function(info) {
+            // evitar borrar el evento recién creado (mobile fix)
+            if (info.event === justCreatedEvent) return;
+
             info.event.remove();
-          },
+          }
           datesSet: function(info) {
             const btn = document.getElementById('saveBtn');
 
@@ -113,6 +136,7 @@
 <button id="saveBtn">OK</button>
 </body>
 </html>
+
 
 
 
