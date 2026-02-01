@@ -94,13 +94,16 @@
       }
     );
     calendar.render();
-
+      document.getElementById('saveBtn').addEventListener('click', () => {
+        calendar.changeView('dayGridMonth');
+});
     console.log("Supabase conectado:", supabase);
   });
 </script>
 <button id="saveBtn">OK</button>
 </body>
 </html>
+
 
 
 
