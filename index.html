@@ -62,10 +62,8 @@ document.addEventListener('DOMContentLoaded', function () {
       slotDuration: '00:30:00',
 
       selectable: true,
-      selectMirror: true,
       longPressDelay: 200,
 
-      // 👉 entrar al día
       dateClick(info) {
         if (calendar.view.type !== 'timeGridDay') {
           activeDay = info.date;
@@ -73,7 +71,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       },
 
-      // 👉 selección por arrastre (PC y móvil)
+      // ✅ selección REAL (sin pre-pintado)
       select(info) {
         let current = new Date(info.start);
 
@@ -93,12 +91,10 @@ document.addEventListener('DOMContentLoaded', function () {
         calendar.unselect();
       },
 
-      // 👉 tocar evento = eliminar
       eventClick(info) {
         info.event.remove();
       },
 
-      // 👉 mostrar botones según vista
       datesSet(info) {
         const saveBtn = document.getElementById('saveBtn');
         const backBtn = document.getElementById('backBtn');
@@ -112,7 +108,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       },
 
-      // 👉 marcar días verdes en vista mes
       eventDidMount(info) {
         const cell = info.el.closest('.fc-daygrid-day');
         if (cell) {
@@ -130,9 +125,8 @@ document.addEventListener('DOMContentLoaded', function () {
     calendar.changeView('dayGridMonth');
   });
 
-  // ❌ Regresar → borrar SOLO el día activo
+  // ❌ Regresar → borrar solo el día activo
   document.getElementById('backBtn').addEventListener('click', () => {
-
     if (activeDay) {
       calendar.getEvents().forEach(event => {
         if (event.start.toDateString() === activeDay.toDateString()) {
@@ -150,6 +144,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </body>
 </html>
+
 
 
 
