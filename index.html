@@ -2,7 +2,9 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Agenda</title>
+  <title>Agenda móvil</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css">
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
@@ -10,42 +12,38 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 20px;
+      padding: 10px;
     }
 
     #calendar {
-      max-width: 900px;
+      max-width: 100%;
       margin: auto;
+    }
+
+    button {
+      padding: 10px 16px;
+      font-size: 16px;
+      margin: 8px 4px;
     }
 
     #saveBtn,
     #backBtn {
       display: none;
-      margin: 10px 5px;
-      padding: 8px 14px;
-      font-size: 16px;
-      cursor: pointer;
     }
 
-    .fc .fc-timegrid-slot-label *,
-    .fc .fc-timegrid-axis-cushion {
-      font-size: 20px;
-      font-weight: 600;
+    .fc .fc-timegrid-slot-label {
+      font-size: 18px;
+      font-weight: bold;
     }
 
     .fc-daygrid-day.has-event {
-      background-color: rgba(39, 174, 96, 0.55);
-    }
-
-    /* 🔥 elimina highlight fantasma */
-    .fc-highlight {
-      background: transparent !important;
+      background-color: rgba(39,174,96,0.45);
     }
   </style>
 </head>
 <body>
 
-<h2>Selecciona un horario disponible</h2>
+<h3>Selecciona un horario</h3>
 
 <div id="calendar"></div>
 
@@ -56,47 +54,69 @@
 document.addEventListener('DOMContentLoaded', function () {
 
   let activeDay = null;
+  let rangeStart = null;
+  let tempEvents = [];
 
   const calendar = new FullCalendar.Calendar(
     document.getElementById('calendar'),
     {
       initialView: 'dayGridMonth',
 
-      selectable: true,
-      selectMirror: false,
-
       slotMinTime: '07:00:00',
       slotMaxTime: '23:00:00',
       slotDuration: '00:30:00',
 
-      // 👉 click en mes → ir al día
-      dateClick: function(info) {
-        if (calendar.view.type !== 'timeGridDay') {
+      dateClick(info) {
+
+        // 📅 Desde mes → día
+        if (calendar.view.type === 'dayGridMonth') {
           activeDay = info.date;
+          rangeStart = null;
+          tempEvents = [];
           calendar.changeView('timeGridDay', info.date);
+          return;
         }
+
+        // ⏰ Vista día
+        const clickedTime = info.date;
+
+        // Si toca un evento existente → borrar ese bloque
+        const existing = calendar.getEvents().find(e =>
+          e.start.getTime() === clickedTime.getTime()
+        );
+        if (existing) {
+          existing.remove();
+          return;
+        }
+
+        // Primer tap → inicio
+        if (!rangeStart) {
+          rangeStart = clickedTime;
+          return;
+        }
+
+        // Segundo tap → crear rango
+        let start = rangeStart < clickedTime ? rangeStart : clickedTime;
+        let end = rangeStart > clickedTime ? rangeStart : clickedTime;
+
+        while (start < end) {
+          const slotEnd = new Date(start.getTime() + 30 * 60000);
+
+          const ev = calendar.addEvent({
+            start: new Date(start),
+            end: slotEnd,
+            backgroundColor: '#27ae60',
+            borderColor: '#1e8449'
+          });
+
+          tempEvents.push(ev);
+          start = slotEnd;
+        }
+
+        rangeStart = null;
       },
 
-      // 👉 SELECCIÓN REAL (tap o drag)
-      select: function(info) {
-        if (calendar.view.type !== 'timeGridDay') return;
-
-        calendar.addEvent({
-          start: info.start,
-          end: info.end,
-          backgroundColor: '#27ae60',
-          borderColor: '#1e8449'
-        });
-
-        calendar.unselect();
-      },
-
-      // quitar evento tocándolo
-      eventClick: function(info) {
-        info.event.remove();
-      },
-
-      datesSet: function(info) {
+      datesSet(info) {
         const saveBtn = document.getElementById('saveBtn');
         const backBtn = document.getElementById('backBtn');
 
@@ -109,7 +129,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       },
 
-      eventDidMount: function(info) {
+      eventDidMount(info) {
         const dayCell = info.el.closest('.fc-daygrid-day');
         if (dayCell) {
           dayCell.classList.add('has-event');
@@ -122,22 +142,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // ✅ OK → guardar
   document.getElementById('saveBtn').addEventListener('click', () => {
+    tempEvents = [];
     activeDay = null;
+    rangeStart = null;
     calendar.changeView('dayGridMonth');
   });
 
-  // ❌ Regresar → borrar solo el día activo
+  // ❌ Regresar → borrar SOLO lo del día activo
   document.getElementById('backBtn').addEventListener('click', () => {
 
-    if (activeDay) {
-      calendar.getEvents().forEach(event => {
-        if (event.start.toDateString() === activeDay.toDateString()) {
-          event.remove();
-        }
-      });
-    }
+    calendar.getEvents().forEach(event => {
+      if (
+        activeDay &&
+        event.start.toDateString() === activeDay.toDateString()
+      ) {
+        event.remove();
+      }
+    });
 
+    tempEvents = [];
     activeDay = null;
+    rangeStart = null;
     calendar.changeView('dayGridMonth');
   });
 
@@ -146,6 +171,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </body>
 </html>
+
+
 
 
 
