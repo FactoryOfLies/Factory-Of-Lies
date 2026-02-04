@@ -33,12 +33,11 @@
       font-weight: 600;
     }
 
-    /* 🟢 Días con eventos en vista mes */
     .fc-daygrid-day.has-event {
       background-color: rgba(39, 174, 96, 0.55);
     }
 
-    /* 🔴 FIX CRÍTICO: quitar selección falsa en desktop */
+    /* 🔥 elimina highlight fantasma */
     .fc-highlight {
       background: transparent !important;
     }
@@ -56,7 +55,6 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-  let justCreatedEvent = null;
   let activeDay = null;
 
   const calendar = new FullCalendar.Calendar(
@@ -64,35 +62,37 @@ document.addEventListener('DOMContentLoaded', function () {
     {
       initialView: 'dayGridMonth',
 
+      selectable: true,
+      selectMirror: false,
+
       slotMinTime: '07:00:00',
       slotMaxTime: '23:00:00',
       slotDuration: '00:30:00',
 
+      // 👉 click en mes → ir al día
       dateClick: function(info) {
-
-        // Ir de mes a día
         if (calendar.view.type !== 'timeGridDay') {
           activeDay = info.date;
           calendar.changeView('timeGridDay', info.date);
-          return;
         }
+      },
 
-        const start = info.date;
-        const end = new Date(start.getTime() + 30 * 60000);
+      // 👉 SELECCIÓN REAL (tap o drag)
+      select: function(info) {
+        if (calendar.view.type !== 'timeGridDay') return;
 
-        const event = calendar.addEvent({
-          start,
-          end,
+        calendar.addEvent({
+          start: info.start,
+          end: info.end,
           backgroundColor: '#27ae60',
           borderColor: '#1e8449'
         });
 
-        justCreatedEvent = event;
-        setTimeout(() => justCreatedEvent = null, 300);
+        calendar.unselect();
       },
 
+      // quitar evento tocándolo
       eventClick: function(info) {
-        if (info.event === justCreatedEvent) return;
         info.event.remove();
       },
 
@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   calendar.render();
 
-  // ✅ OK → guardar todo
+  // ✅ OK → guardar
   document.getElementById('saveBtn').addEventListener('click', () => {
     activeDay = null;
     calendar.changeView('dayGridMonth');
@@ -128,6 +128,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // ❌ Regresar → borrar solo el día activo
   document.getElementById('backBtn').addEventListener('click', () => {
+
     if (activeDay) {
       calendar.getEvents().forEach(event => {
         if (event.start.toDateString() === activeDay.toDateString()) {
@@ -145,6 +146,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </body>
 </html>
+
+
 
 
 
