@@ -34,7 +34,7 @@
     }
 
     .fc-daygrid-day.has-event {
-      background-color: rgba(39, 174, 96, 0.55);
+      background-color: rgba(39, 174, 96, 0.6);
     }
   </style>
 </head>
@@ -60,10 +60,12 @@ document.addEventListener('DOMContentLoaded', function () {
       slotMinTime: '07:00:00',
       slotMaxTime: '23:00:00',
       slotDuration: '00:30:00',
-      selectable: true,           // 👈 CLAVE
-      selectMirror: true,
-      selectOverlap: false,
 
+      selectable: true,
+      selectMirror: true,
+      longPressDelay: 200,
+
+      // 👉 entrar al día
       dateClick(info) {
         if (calendar.view.type !== 'timeGridDay') {
           activeDay = info.date;
@@ -71,27 +73,32 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       },
 
-      // 👉 ARRASTRAR (mouse o dedo)
+      // 👉 selección por arrastre (PC y móvil)
       select(info) {
-        if (calendar.view.type !== 'timeGridDay') return;
+        let current = new Date(info.start);
 
-        const start = info.start;
-        const end = info.end;
+        while (current < info.end) {
+          const next = new Date(current.getTime() + 30 * 60000);
 
-        calendar.addEvent({
-          start,
-          end,
-          backgroundColor: '#27ae60',
-          borderColor: '#1e8449'
-        });
+          calendar.addEvent({
+            start: new Date(current),
+            end: next,
+            backgroundColor: '#27ae60',
+            borderColor: '#1e8449'
+          });
+
+          current = next;
+        }
 
         calendar.unselect();
       },
 
+      // 👉 tocar evento = eliminar
       eventClick(info) {
         info.event.remove();
       },
 
+      // 👉 mostrar botones según vista
       datesSet(info) {
         const saveBtn = document.getElementById('saveBtn');
         const backBtn = document.getElementById('backBtn');
@@ -105,10 +112,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       },
 
+      // 👉 marcar días verdes en vista mes
       eventDidMount(info) {
-        const dayCell = info.el.closest('.fc-daygrid-day');
-        if (dayCell) {
-          dayCell.classList.add('has-event');
+        const cell = info.el.closest('.fc-daygrid-day');
+        if (cell) {
+          cell.classList.add('has-event');
         }
       }
     }
@@ -122,8 +130,9 @@ document.addEventListener('DOMContentLoaded', function () {
     calendar.changeView('dayGridMonth');
   });
 
-  // ❌ REGRESAR → borrar solo eventos del día activo
+  // ❌ Regresar → borrar SOLO el día activo
   document.getElementById('backBtn').addEventListener('click', () => {
+
     if (activeDay) {
       calendar.getEvents().forEach(event => {
         if (event.start.toDateString() === activeDay.toDateString()) {
@@ -141,6 +150,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </body>
 </html>
+
+
 
 
 
