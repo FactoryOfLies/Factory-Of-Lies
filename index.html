@@ -50,8 +50,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-  let justCreatedEvent = null;
-  let activeDay = null; // 👈 día que se está editando
+  let activeDay = null;
 
   const calendar = new FullCalendar.Calendar(
     document.getElementById('calendar'),
@@ -61,38 +60,39 @@ document.addEventListener('DOMContentLoaded', function () {
       slotMinTime: '07:00:00',
       slotMaxTime: '23:00:00',
       slotDuration: '00:30:00',
+      selectable: true,           // 👈 CLAVE
+      selectMirror: true,
+      selectOverlap: false,
 
-      dateClick: function(info) {
-
-        // cambiar de mes a día
+      dateClick(info) {
         if (calendar.view.type !== 'timeGridDay') {
-          activeDay = info.date; // 👈 guardar día activo
+          activeDay = info.date;
           calendar.changeView('timeGridDay', info.date);
-          return;
         }
+      },
 
-        const start = info.date;
-        const end = new Date(start.getTime() + 30 * 60000);
+      // 👉 ARRASTRAR (mouse o dedo)
+      select(info) {
+        if (calendar.view.type !== 'timeGridDay') return;
 
-        const event = calendar.addEvent({
+        const start = info.start;
+        const end = info.end;
+
+        calendar.addEvent({
           start,
           end,
           backgroundColor: '#27ae60',
           borderColor: '#1e8449'
         });
 
-        justCreatedEvent = event;
-        setTimeout(() => {
-          justCreatedEvent = null;
-        }, 300);
+        calendar.unselect();
       },
 
-      eventClick: function(info) {
-        if (info.event === justCreatedEvent) return;
+      eventClick(info) {
         info.event.remove();
       },
 
-      datesSet: function(info) {
+      datesSet(info) {
         const saveBtn = document.getElementById('saveBtn');
         const backBtn = document.getElementById('backBtn');
 
@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       },
 
-      eventDidMount: function(info) {
+      eventDidMount(info) {
         const dayCell = info.el.closest('.fc-daygrid-day');
         if (dayCell) {
           dayCell.classList.add('has-event');
@@ -116,20 +116,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
   calendar.render();
 
-  // ✅ OK → guardar (no borrar nada)
+  // ✅ OK → guardar
   document.getElementById('saveBtn').addEventListener('click', () => {
     activeDay = null;
     calendar.changeView('dayGridMonth');
   });
 
-  // ❌ REGRESAR → borrar eventos del día activo
+  // ❌ REGRESAR → borrar solo eventos del día activo
   document.getElementById('backBtn').addEventListener('click', () => {
-
     if (activeDay) {
       calendar.getEvents().forEach(event => {
-        if (
-          event.start.toDateString() === activeDay.toDateString()
-        ) {
+        if (event.start.toDateString() === activeDay.toDateString()) {
           event.remove();
         }
       });
@@ -144,6 +141,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </body>
 </html>
+
 
 
 
