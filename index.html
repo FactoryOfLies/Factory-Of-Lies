@@ -33,8 +33,14 @@
       font-weight: 600;
     }
 
+    /* 🟢 Días con eventos en vista mes */
     .fc-daygrid-day.has-event {
-      background-color: rgba(39, 174, 96, 0.6);
+      background-color: rgba(39, 174, 96, 0.55);
+    }
+
+    /* 🔴 FIX CRÍTICO: quitar selección falsa en desktop */
+    .fc-highlight {
+      background: transparent !important;
     }
   </style>
 </head>
@@ -50,6 +56,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
+  let justCreatedEvent = null;
   let activeDay = null;
 
   const calendar = new FullCalendar.Calendar(
@@ -61,41 +68,35 @@ document.addEventListener('DOMContentLoaded', function () {
       slotMaxTime: '23:00:00',
       slotDuration: '00:30:00',
 
-      selectable: true,
-      longPressDelay: 200,
+      dateClick: function(info) {
 
-      dateClick(info) {
+        // Ir de mes a día
         if (calendar.view.type !== 'timeGridDay') {
           activeDay = info.date;
           calendar.changeView('timeGridDay', info.date);
-        }
-      },
-
-      // ✅ selección REAL (sin pre-pintado)
-      select(info) {
-        let current = new Date(info.start);
-
-        while (current < info.end) {
-          const next = new Date(current.getTime() + 30 * 60000);
-
-          calendar.addEvent({
-            start: new Date(current),
-            end: next,
-            backgroundColor: '#27ae60',
-            borderColor: '#1e8449'
-          });
-
-          current = next;
+          return;
         }
 
-        calendar.unselect();
+        const start = info.date;
+        const end = new Date(start.getTime() + 30 * 60000);
+
+        const event = calendar.addEvent({
+          start,
+          end,
+          backgroundColor: '#27ae60',
+          borderColor: '#1e8449'
+        });
+
+        justCreatedEvent = event;
+        setTimeout(() => justCreatedEvent = null, 300);
       },
 
-      eventClick(info) {
+      eventClick: function(info) {
+        if (info.event === justCreatedEvent) return;
         info.event.remove();
       },
 
-      datesSet(info) {
+      datesSet: function(info) {
         const saveBtn = document.getElementById('saveBtn');
         const backBtn = document.getElementById('backBtn');
 
@@ -108,10 +109,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       },
 
-      eventDidMount(info) {
-        const cell = info.el.closest('.fc-daygrid-day');
-        if (cell) {
-          cell.classList.add('has-event');
+      eventDidMount: function(info) {
+        const dayCell = info.el.closest('.fc-daygrid-day');
+        if (dayCell) {
+          dayCell.classList.add('has-event');
         }
       }
     }
@@ -119,7 +120,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   calendar.render();
 
-  // ✅ OK → guardar
+  // ✅ OK → guardar todo
   document.getElementById('saveBtn').addEventListener('click', () => {
     activeDay = null;
     calendar.changeView('dayGridMonth');
@@ -144,6 +145,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </body>
 </html>
+
 
 
 
