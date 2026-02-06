@@ -46,6 +46,20 @@
     .fc-daygrid-event {
       display: none;
     }
+    #confirmBtn {
+      display: none;
+      background-color: #c0392b;
+      color: white;
+      border: none;
+      padding: 12px 18px;
+      font-size: 18px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    #confirmBtn:active {
+      background-color: #a93226;
+    }
   </style>
 </head>
 <body>
@@ -56,7 +70,7 @@
 
 <button id="backBtn">Regresar</button>
 <button id="saveBtn">OK</button>
-
+<button id="confirmBtn">¡Confirmar!</button>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
@@ -146,13 +160,16 @@ document.addEventListener('DOMContentLoaded', function () {
       datesSet(info) {
         const saveBtn = document.getElementById('saveBtn');
         const backBtn = document.getElementById('backBtn');
+        const confirmBtn = document.getElementById('confirmBtn');
 
         if (info.view.type === 'timeGridDay') {
           saveBtn.style.display = 'inline-block';
           backBtn.style.display = 'inline-block';
+          confirmBtn.style.display = 'none';
         } else {
           saveBtn.style.display = 'none';
           backBtn.style.display = 'none';
+          confirmBtn.style.display = 'inline-block';
         }
       },
 
@@ -207,6 +224,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </body>
 </html>
+
 
 
 
