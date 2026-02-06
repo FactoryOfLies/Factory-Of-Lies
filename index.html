@@ -1,21 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<title>Agenda móvil</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css">
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-
-<style>
-body {
-  font-family: Arial, sans-serif;
-  padding: 10px;
-}
-
-#calendar {
-  max-width: 100%;
 }
 
 button {
@@ -31,6 +14,10 @@ button {
 .fc .fc-timegrid-slot-label {
   font-size: 18px;
   font-weight: bold;
+}
+
+.fc-daygrid-day.has-event {
+  background-color: rgba(39,174,96,0.45);
 }
 </style>
 </head>
@@ -49,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let activeDay = null;
   let startTime = null;
-  let startPreview = null; // 🔶 evento naranja
+  let startPreview = null;
 
   const calendar = new FullCalendar.Calendar(
     document.getElementById('calendar'),
@@ -61,19 +48,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
       dateClick(info) {
 
-        // 📅 Mes → Día
+        // 📅 MES → SIEMPRE IR A DÍA (NO BORRAR NADA)
         if (calendar.view.type === 'dayGridMonth') {
           activeDay = info.date;
-          startTime = null;
-          if (startPreview) {
-            startPreview.remove();
-            startPreview = null;
-          }
           calendar.changeView('timeGridDay', info.date);
           return;
         }
 
-        // ⏰ Vista día
+        // ⏰ VISTA DÍA
 
         // Primer tap → inicio (naranja)
         if (!startTime) {
@@ -89,11 +71,10 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        // Segundo tap → fin (verde)
+        // Segundo tap → crear rango verde
         let start = startTime < info.date ? startTime : info.date;
         let end = startTime > info.date ? startTime : info.date;
 
-        // borrar preview naranja
         if (startPreview) {
           startPreview.remove();
           startPreview = null;
@@ -115,7 +96,6 @@ document.addEventListener('DOMContentLoaded', () => {
         startTime = null;
       },
 
-      // Tap sobre verde → borrar bloque
       eventClick(info) {
         info.event.remove();
       },
@@ -130,6 +110,13 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
           saveBtn.style.display = 'none';
           backBtn.style.display = 'none';
+        }
+      },
+
+      eventDidMount(info) {
+        const dayCell = info.el.closest('.fc-daygrid-day');
+        if (dayCell) {
+          dayCell.classList.add('has-event');
         }
       }
     }
@@ -148,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
     calendar.changeView('dayGridMonth');
   };
 
-  // ❌ Regresar → borrar solo el día activo
+  // ❌ Regresar → borrar SOLO lo del día activo
   document.getElementById('backBtn').onclick = () => {
     calendar.getEvents().forEach(e => {
       if (activeDay && e.start.toDateString() === activeDay.toDateString()) {
@@ -170,6 +157,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </body>
 </html>
+
+
 
 
 
