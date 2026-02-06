@@ -88,6 +88,15 @@ document.addEventListener('DOMContentLoaded', function () {
       slotMaxTime: '23:00:00',
       slotDuration: '00:30:00',
 
+      eventClick(info) {
+
+        // ⛔ no borrar el marcador naranja
+        if (info.event === tempStartEvent) return;
+
+        // ❌ borrar evento verde
+        info.event.remove();
+      },
+
       dateClick(info) {
         // 📅 Vista mes → entrar a día
         if (calendar.view.type === 'dayGridMonth') {
@@ -223,6 +232,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </body>
 </html>
+
 
 
 
