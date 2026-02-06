@@ -89,16 +89,6 @@ document.addEventListener('DOMContentLoaded', function () {
       slotDuration: '00:30:00',
 
       dateClick(info) {
-        // ⛔ Si el slot ya tiene evento → borrar
-        const existingEvent = calendar.getEvents().find(ev =>
-          ev.start.getTime() === info.date.getTime()
-        );
-
-        if (existingEvent) {
-          existingEvent.remove();
-          return;
-        }
-
         // 📅 Vista mes → entrar a día
         if (calendar.view.type === 'dayGridMonth') {
           activeDay = info.date;
@@ -115,6 +105,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // ⏰ Vista día
         const clickedTime = info.date;
+        // ⛔ Si el slot ya tiene evento → borrar
+        const existingEvent = calendar.getEvents().find(ev =>
+          ev.start.getTime() === info.date.getTime()
+        );
+
+        if (existingEvent) {
+          existingEvent.remove();
+          return;
+        }
 
         // Si toca un evento existente → borrar ese bloque
         const existing = calendar.getEvents().find(e =>
@@ -233,6 +232,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </body>
 </html>
+
 
 
 
