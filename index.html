@@ -62,6 +62,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   let activeDay = null;
   let rangeStart = null;
+  let tempStartEvent = null; // 👈 evento naranja
 
   const calendar = new FullCalendar.Calendar(
     document.getElementById('calendar'),
@@ -75,10 +76,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
       dateClick(info) {
 
-        // 📅 Vista mes → entrar a día (NUNCA borrar)
+        // 📅 Vista mes → entrar a día
         if (calendar.view.type === 'dayGridMonth') {
           activeDay = info.date;
           rangeStart = null;
+
+          if (tempStartEvent) {
+            tempStartEvent.remove();
+            tempStartEvent = null;
+          }
+
           calendar.changeView('timeGridDay', info.date);
           return;
         }
@@ -86,24 +93,39 @@ document.addEventListener('DOMContentLoaded', function () {
         // ⏰ Vista día
         const clickedTime = info.date;
 
-        // Si toca un evento existente → eliminar SOLO ese bloque
+        // Si toca un evento existente → borrar ese bloque
         const existing = calendar.getEvents().find(e =>
-          e.start.getTime() === clickedTime.getTime()
+          e.start.getTime() === clickedTime.getTime() &&
+          e !== tempStartEvent
         );
         if (existing) {
           existing.remove();
           return;
         }
 
-        // Primer tap → marcar inicio
+        // 🟧 PRIMER TAP → marcar inicio en naranja
         if (!rangeStart) {
           rangeStart = clickedTime;
+
+          tempStartEvent = calendar.addEvent({
+            start: clickedTime,
+            end: new Date(clickedTime.getTime() + 30 * 60000),
+            backgroundColor: '#f39c12',
+            borderColor: '#d68910'
+          });
+
           return;
         }
 
-        // Segundo tap → crear rango
+        // 🟩 SEGUNDO TAP → crear rango definitivo
         let start = rangeStart < clickedTime ? rangeStart : clickedTime;
         let end = rangeStart > clickedTime ? rangeStart : clickedTime;
+
+        // borrar marcador naranja
+        if (tempStartEvent) {
+          tempStartEvent.remove();
+          tempStartEvent = null;
+        }
 
         while (start < end) {
           const slotEnd = new Date(start.getTime() + 30 * 60000);
@@ -112,8 +134,7 @@ document.addEventListener('DOMContentLoaded', function () {
             start: new Date(start),
             end: slotEnd,
             backgroundColor: '#27ae60',
-            borderColor: '#1e8449',
-            display: 'auto'
+            borderColor: '#1e8449'
           });
 
           start = slotEnd;
@@ -146,10 +167,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
   calendar.render();
 
-  // ✅ OK → guardar y volver
+  // ✅ OK → guardar
   document.getElementById('saveBtn').addEventListener('click', () => {
     activeDay = null;
     rangeStart = null;
+
+    if (tempStartEvent) {
+      tempStartEvent.remove();
+      tempStartEvent = null;
+    }
+
     calendar.changeView('dayGridMonth');
   });
 
@@ -164,8 +191,14 @@ document.addEventListener('DOMContentLoaded', function () {
       });
     }
 
-    activeDay = null;
     rangeStart = null;
+
+    if (tempStartEvent) {
+      tempStartEvent.remove();
+      tempStartEvent = null;
+    }
+
+    activeDay = null;
     calendar.changeView('dayGridMonth');
   });
 
@@ -174,6 +207,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </body>
 </html>
+
 
 
 
