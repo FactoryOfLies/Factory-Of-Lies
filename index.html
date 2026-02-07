@@ -99,37 +99,7 @@
 <pre id="summaryText"></pre>
 
   <button id="finalConfirmBtn">¡Confirmar!</button>
-<script>
-const USER_ID = crypto.randomUUID(); // 🔹 simulamos usuario por ahora
 
-document.getElementById('finalConfirmBtn').addEventListener('click', async () => {
-
-  const events = calendar.getEvents().filter(e => e !== tempStartEvent);
-
-  if (events.length === 0) {
-    alert('No hay horarios para guardar');
-    return;
-  }
-
-  const rows = events.map(e => ({
-    user_id: USER_ID,
-    slot_start: e.start.toISOString(),
-    slot_end: e.end.toISOString()
-  }));
-
-  const { error } = await supabase
-    .from('availability')
-    .insert(rows);
-
-  if (error) {
-    console.error(error);
-    alert('Error al guardar horarios');
-    return;
-  }
-
-  alert('Horarios guardados correctamente ✅');
-});
-</script>
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -251,7 +221,37 @@ document.addEventListener('DOMContentLoaded', function () {
   );
 
   calendar.render();
+<script>
+const USER_ID = crypto.randomUUID(); // 🔹 simulamos usuario por ahora
 
+document.getElementById('finalConfirmBtn').addEventListener('click', async () => {
+
+  const events = calendar.getEvents().filter(e => e !== tempStartEvent);
+
+  if (events.length === 0) {
+    alert('No hay horarios para guardar');
+    return;
+  }
+
+  const rows = events.map(e => ({
+    user_id: USER_ID,
+    slot_start: e.start.toISOString(),
+    slot_end: e.end.toISOString()
+  }));
+
+  const { error } = await supabase
+    .from('availability')
+    .insert(rows);
+
+  if (error) {
+    console.error(error);
+    alert('Error al guardar horarios');
+    return;
+  }
+
+  alert('Horarios guardados correctamente ✅');
+});
+</script>
   // ✅ OK → guardar
   document.getElementById('saveBtn').addEventListener('click', () => {
     activeDay = null;
@@ -343,6 +343,7 @@ document.getElementById('summary').style.display = 'block';
 
 </body>
 </html>
+
 
 
 
