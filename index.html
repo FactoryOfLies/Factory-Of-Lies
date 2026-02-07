@@ -12,8 +12,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const supabase = supabase.createClient(
-      'https://ozteuislgcnuloivagyn.supabase.co',
-      'sb_publishable_9mcuWT1vNqROGBNCJgQblg_0Pn3OrVA'
+      const supabaseUrl ='https://ozteuislgcnuloivagyn.supabase.co',
+      const supabaseKey ='sb_publishable_9mcuWT1vNqROGBNCJgQblg_0Pn3OrVA'
+      const supabase = supabase.createClient(supabaseUrl, supabaseKey)
     )
 </script>
   <style>
@@ -342,6 +343,7 @@ document.getElementById('summary').style.display = 'block';
 
 </body>
 </html>
+
 
 
 
