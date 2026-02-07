@@ -226,12 +226,63 @@ document.addEventListener('DOMContentLoaded', function () {
     activeDay = null;
     calendar.changeView('dayGridMonth');
   });
+  document.getElementById('confirmBtn').addEventListener('click', () => {
+
+  const events = calendar.getEvents().filter(e => e !== tempStartEvent);
+
+  if (events.length === 0) {
+    alert('No hay horarios seleccionados');
+    return;
+  }
+
+  const grouped = {};
+
+  events.forEach(event => {
+    const dateKey = event.start.toISOString().split('T')[0];
+
+    if (!grouped[dateKey]) {
+      grouped[dateKey] = [];
+    }
+
+    grouped[dateKey].push(event.start);
+  });
+
+  let output = '';
+
+  Object.keys(grouped).sort().forEach(dateKey => {
+    const date = new Date(dateKey + 'T00:00:00');
+
+    const dayName = date.toLocaleDateString('es-ES', {
+      weekday: 'long'
+    });
+
+    const dateLabel = date.toLocaleDateString('es-ES');
+
+    output += `📅 ${dayName} ${dateLabel}\n`;
+
+    grouped[dateKey]
+      .sort((a, b) => a - b)
+      .forEach(time => {
+        const hour = time.toLocaleTimeString('es-ES', {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        output += `   ⏰ ${hour}\n`;
+      });
+
+    output += '\n';
+  });
+
+  alert(output); // ← simple y efectivo
+
+});
 
 });
 </script>
 
 </body>
 </html>
+
 
 
 
