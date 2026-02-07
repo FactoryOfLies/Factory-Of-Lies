@@ -60,6 +60,23 @@
     #confirmBtn:active {
       background-color: #a93226;
     }
+    #summary {
+      margin-top: 20px;
+    }
+
+    #finalConfirmBtn {
+      background-color: #c0392b;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      font-size: 18px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    #finalConfirmBtn:active {
+      background-color: #a93226;
+    }
   </style>
 </head>
 <body>
@@ -71,6 +88,12 @@
 <button id="backBtn">Regresar (borrar)</button>
 <button id="saveBtn">OK</button>
 <button id="confirmBtn">¡Confirmar!</button>
+<div id="summary" style="display:none;">
+<h3>Resumen de horarios</h3>
+<pre id="summaryText"></pre>
+
+  <button id="finalConfirmBtn">¡Confirmar!</button>
+</div>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
@@ -273,7 +296,8 @@ document.addEventListener('DOMContentLoaded', function () {
     output += '\n';
   });
 
-  alert(output); // ← simple y efectivo
+document.getElementById('summaryText').textContent = output;
+document.getElementById('summary').style.display = 'block';
 
 });
 
@@ -282,6 +306,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </body>
 </html>
+
 
 
 
