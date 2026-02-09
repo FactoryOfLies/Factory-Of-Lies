@@ -226,8 +226,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
   calendar.render();
   
-const USER_ID = crypto.randomUUID(); // 🔹 simulamos usuario por ahora
-
+const { data } = await supabase.auth.getUser();
+const USER_ID = data.user.id;
+  
 document.getElementById('finalConfirmBtn').addEventListener('click', async () => {
 
   const events = calendar.getEvents().filter(e => e !== tempStartEvent);
@@ -346,6 +347,7 @@ document.getElementById('summary').style.display = 'block';
 
 </body>
 </html>
+
 
 
 
