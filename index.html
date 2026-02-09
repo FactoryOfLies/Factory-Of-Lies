@@ -224,12 +224,17 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   );
 
-  calendar.render();
-  
-const { data } = await supabase.auth.getUser();
-const USER_ID = data.user.id;
-  
+  calendar.render();  
 document.getElementById('finalConfirmBtn').addEventListener('click', async () => {
+   const { data: { user }, error: userError } =
+    await supabaseClient.auth.getUser();
+
+  if (userError || !user) {
+    alert('No hay usuario logueado');
+    return;
+  }
+
+  const USER_ID = user.id;
 
   const events = calendar.getEvents().filter(e => e !== tempStartEvent);
 
@@ -347,6 +352,7 @@ document.getElementById('summary').style.display = 'block';
 
 </body>
 </html>
+
 
 
 
