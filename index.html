@@ -14,11 +14,11 @@
     const supabaseUrl = 'https://ozteuislgcnuloivagyn.supabase.co'
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im96dGV1aXNsZ2NudWxvaXZhZ3luIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkzNjE0NjYsImV4cCI6MjA4NDkzNzQ2Nn0.MNp6Y3NdmlVFvjz66MaAoYO3OOdpI5lLb-7CTh8lnwg'
 
-    const supabaseClient = window.supabase.createClient(
-      supabaseUrl,
-      supabaseKey
-      )
-      console.log('Supabase client:', supabaseClient)
+  window.supabaseClient = window.supabase.createClient(
+    supabaseUrl,
+    supabaseKey
+  );      
+  console.log('Supabase client:', supabaseClient)
 </script>
   <style>
     body {
@@ -352,6 +352,7 @@ document.getElementById('summary').style.display = 'block';
 
 </body>
 </html>
+
 
 
 
