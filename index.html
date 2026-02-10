@@ -137,11 +137,15 @@ async function checkSession() {
     loginBtn.style.display = 'none';
     registerBtn.style.display = 'none';
     logoutBtn.style.display = 'inline-block';
+
+    app.style.display = 'block';   // 👈 mostrar calendario
   } else {
     authStatus.textContent = 'No hay sesión activa';
     loginBtn.style.display = 'inline-block';
     registerBtn.style.display = 'inline-block';
     logoutBtn.style.display = 'none';
+
+    app.style.display = 'none';    // 👈 ocultar calendario
   }
 }
 
@@ -431,6 +435,7 @@ document.getElementById('summary').style.display = 'block';
 
 </body>
 </html>
+
 
 
 
