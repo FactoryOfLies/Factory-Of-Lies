@@ -128,7 +128,7 @@ const authStatus = document.getElementById('authStatus');
 const loginBtn = document.getElementById('loginBtn');
 const registerBtn = document.getElementById('registerBtn');
 const logoutBtn = document.getElementById('logoutBtn');
-
+let calendarRendered = false;
 async function checkSession() {
   const { data: { user } } = await supabaseClient.auth.getUser();
 
@@ -138,14 +138,21 @@ async function checkSession() {
     registerBtn.style.display = 'none';
     logoutBtn.style.display = 'inline-block';
 
-    app.style.display = 'block';   // 👈 mostrar calendario
+    app.style.display = 'block';
+
+    // 👇 renderizar solo una vez
+    if (!calendarRendered) {
+      calendar.render();
+      calendarRendered = true;
+    }
+
   } else {
     authStatus.textContent = 'No hay sesión activa';
     loginBtn.style.display = 'inline-block';
     registerBtn.style.display = 'inline-block';
     logoutBtn.style.display = 'none';
 
-    app.style.display = 'none';    // 👈 ocultar calendario
+    app.style.display = 'none';
   }
 }
 
@@ -306,8 +313,7 @@ checkSession();
       }
     }
   );
-
-  calendar.render();  
+  
 document.getElementById('finalConfirmBtn').addEventListener('click', async () => {
    const { data: { user }, error: userError } =
     await supabaseClient.auth.getUser();
@@ -435,6 +441,7 @@ document.getElementById('summary').style.display = 'block';
 
 </body>
 </html>
+
 
 
 
