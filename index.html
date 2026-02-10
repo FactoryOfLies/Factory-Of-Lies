@@ -335,8 +335,8 @@ logoutBtn.addEventListener('click', async () => {
     loginBtn.style.display = 'inline-block';
     registerBtn.style.display = 'inline-block';
     logoutBtn.style.display = 'none';
-
-    app.style.display = 'none';
+    resetAppState();
+    
   }
 }
 document.getElementById('finalConfirmBtn').addEventListener('click', async () => {
@@ -466,6 +466,7 @@ checkSession();
 
 </body>
 </html>
+
 
 
 
