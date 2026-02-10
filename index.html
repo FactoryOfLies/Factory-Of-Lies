@@ -180,12 +180,6 @@ logoutBtn.addEventListener('click', async () => {
 
 // comprobar sesión al cargar
 checkSession();
-  let calendar;
-  let calendarRendered = false;
-  let activeDay = null;
-  let rangeStart = null;
-  let tempStartEvent = null; // 👈 evento naranja
-
   calendar = new FullCalendar.Calendar(
     document.getElementById('calendar'),
     {
@@ -450,6 +444,7 @@ document.getElementById('summary').style.display = 'block';
 
 </body>
 </html>
+
 
 
 
