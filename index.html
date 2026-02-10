@@ -80,6 +80,20 @@
   </style>
 </head>
 <body>
+  <div id="authBox">
+    <h3>Acceso</h3>
+
+    <input id="email" type="email" placeholder="Email" />
+    <br><br>
+    <input id="password" type="password" placeholder="Contraseña" />
+    <br><br>
+
+    <button id="loginBtn">Iniciar sesión</button>
+    <button id="registerBtn">Registrarse</button>
+    <button id="logoutBtn" style="display:none;">Cerrar sesión</button>
+
+    <p id="authStatus"></p>
+  </div>
 
 <h3>Selecciona un horario</h3>
 
@@ -351,6 +365,7 @@ document.getElementById('summary').style.display = 'block';
 
 </body>
 </html>
+
 
 
 
