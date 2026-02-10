@@ -143,6 +143,70 @@ async function checkSession() {
   }
 }
 document.addEventListener('DOMContentLoaded', function () {
+const emailInput = document.getElementById('email');
+const passwordInput = document.getElementById('password');
+const authStatus = document.getElementById('authStatus');
+const loginBtn = document.getElementById('loginBtn');
+const registerBtn = document.getElementById('registerBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+
+async function checkSession() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+
+  if (user) {
+    authStatus.textContent = `Logueado como ${user.email}`;
+    loginBtn.style.display = 'none';
+    registerBtn.style.display = 'none';
+    logoutBtn.style.display = 'inline-block';
+  } else {
+    authStatus.textContent = 'No hay sesión activa';
+    loginBtn.style.display = 'inline-block';
+    registerBtn.style.display = 'inline-block';
+    logoutBtn.style.display = 'none';
+  }
+}
+
+loginBtn.addEventListener('click', async () => {
+  const email = emailInput.value;
+  const password = passwordInput.value;
+
+  const { error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) {
+    authStatus.textContent = error.message;
+  } else {
+    authStatus.textContent = 'Sesión iniciada ✅';
+    checkSession();
+  }
+});
+
+registerBtn.addEventListener('click', async () => {
+  const email = emailInput.value;
+  const password = passwordInput.value;
+
+  const { error } = await supabaseClient.auth.signUp({
+    email,
+    password
+  });
+
+  if (error) {
+    authStatus.textContent = error.message;
+  } else {
+    authStatus.textContent = 'Usuario registrado ✅ (revisa tu email si hay confirmación)';
+  }
+});
+
+logoutBtn.addEventListener('click', async () => {
+  await supabaseClient.auth.signOut();
+  authStatus.textContent = 'Sesión cerrada';
+  checkSession();
+});
+
+// comprobar sesión al cargar
+checkSession();
 
   let activeDay = null;
   let rangeStart = null;
@@ -388,6 +452,7 @@ document.getElementById('summary').style.display = 'block';
 
 </body>
 </html>
+
 
 
 
