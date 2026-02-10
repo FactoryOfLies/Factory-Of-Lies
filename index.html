@@ -95,13 +95,15 @@
     <p id="authStatus"></p>
   </div>
 
-<h3>Selecciona un horario</h3>
+<div id="app" style="display:none;">  
+  <h3>Selecciona un horario</h3>
 
-<div id="calendar"></div>
+  <div id="calendar"></div>
 
-<button id="backBtn">Regresar (borrar)</button>
-<button id="saveBtn">OK</button>
-<button id="confirmBtn">Aceptar</button>
+  <button id="backBtn">Regresar (borrar)</button>
+  <button id="saveBtn">OK</button>
+  <button id="confirmBtn">Aceptar</button>
+</div>
 <div id="summary" style="display:none;">
 <h3>Resumen de horarios</h3>
 <pre id="summaryText"></pre>
@@ -118,7 +120,28 @@
     supabaseKey
   );      
   console.log('Supabase client:', window.supabaseClient)
-  
+
+  const app = document.getElementById('app');
+
+async function checkSession() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+
+  if (user) {
+    authStatus.textContent = `Logueado como ${user.email}`;
+    loginBtn.style.display = 'none';
+    registerBtn.style.display = 'none';
+    logoutBtn.style.display = 'inline-block';
+
+    app.style.display = 'block';   // 👈 mostrar calendario
+  } else {
+    authStatus.textContent = 'No hay sesión activa';
+    loginBtn.style.display = 'inline-block';
+    registerBtn.style.display = 'inline-block';
+    logoutBtn.style.display = 'none';
+
+    app.style.display = 'none';    // 👈 ocultar calendario
+  }
+}
 document.addEventListener('DOMContentLoaded', function () {
 
   let activeDay = null;
@@ -365,6 +388,7 @@ document.getElementById('summary').style.display = 'block';
 
 </body>
 </html>
+
 
 
 
