@@ -309,6 +309,8 @@ logoutBtn.addEventListener('click', async () => {
 
   } else {
     authStatus.textContent = 'No hay sesión activa';
+    authBox.style.display = 'block';
+     app.style.display = 'none';        // 👈 OCULTAR APP
     loginBtn.style.display = 'inline-block';
     registerBtn.style.display = 'inline-block';
     logoutBtn.style.display = 'none';
@@ -443,6 +445,7 @@ checkSession();
 
 </body>
 </html>
+
 
 
 
