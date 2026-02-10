@@ -122,6 +122,7 @@
   console.log('Supabase client:', window.supabaseClient)
   
 document.addEventListener('DOMContentLoaded', function () {
+const authBox = document.getElementById('authBox');
 const supabaseClient = window.supabaseClient;
 const app = document.getElementById('app');
   
@@ -292,6 +293,8 @@ logoutBtn.addEventListener('click', async () => {
 
   if (user) {
     authStatus.textContent = `Logueado como ${user.email}`;
+    authBox.style.display = 'none';   // 👈 OCULTAR LOGIN
+    app.style.display = 'block';      // 👈 MOSTRAR APP
     loginBtn.style.display = 'none';
     registerBtn.style.display = 'none';
     logoutBtn.style.display = 'inline-block';
@@ -440,6 +443,7 @@ checkSession();
 
 </body>
 </html>
+
 
 
 
