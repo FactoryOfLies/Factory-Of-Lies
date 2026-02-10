@@ -139,6 +139,26 @@ let activeDay = null;
 let rangeStart = null;
 let tempStartEvent = null;
 
+resetAppState() {
+  // Ocultar resumen
+  document.getElementById('summary').style.display = 'none';
+  document.getElementById('summaryText').textContent = '';
+
+  // Limpiar calendario
+  if (calendar) {
+    calendar.getEvents().forEach(event => event.remove());
+  }
+
+  // Resetear estados
+  activeDay = null;
+  rangeStart = null;
+
+  if (tempStartEvent) {
+    tempStartEvent.remove();
+    tempStartEvent = null;
+  }
+}
+
   
 loginBtn.addEventListener('click', async () => {
   const email = emailInput.value;
@@ -175,6 +195,7 @@ registerBtn.addEventListener('click', async () => {
 
 logoutBtn.addEventListener('click', async () => {
   await supabaseClient.auth.signOut();
+  resetAppState();
   checkSession();
 });
   calendar = new FullCalendar.Calendar(
@@ -445,6 +466,7 @@ checkSession();
 
 </body>
 </html>
+
 
 
 
