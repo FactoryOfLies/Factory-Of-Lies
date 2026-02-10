@@ -175,11 +175,7 @@ registerBtn.addEventListener('click', async () => {
 logoutBtn.addEventListener('click', async () => {
   await supabaseClient.auth.signOut();
   authStatus.textContent = 'Sesión cerrada';
-  checkSession();
 });
-
-// comprobar sesión al cargar
-checkSession();
   calendar = new FullCalendar.Calendar(
     document.getElementById('calendar'),
     {
@@ -444,6 +440,7 @@ document.getElementById('summary').style.display = 'block';
 
 </body>
 </html>
+
 
 
 
