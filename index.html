@@ -190,7 +190,7 @@ document.addEventListener('DOMContentLoaded', function () {
   logoutBtn.addEventListener('click', async () => {
     await supabaseClient.auth.signOut();
     resetAppState();
-    kSession();
+    checkSession();
   });
 
  calendar = new FullCalendar.Calendar(
@@ -380,6 +380,7 @@ document.getElementById('confirmBtn').addEventListener('click', () => {
 </script>
 </body>
 </html>
+
 
 
 
