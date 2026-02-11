@@ -193,10 +193,92 @@ document.addEventListener('DOMContentLoaded', function () {
     checkSession();
   });
 
-  calendar = new FullCalendar.Calendar(
-    document.getElementById('calendar'),
-    { /* TU CONFIG ACTUAL ESTÁ BIEN */ }
-  );
+ calendar = new FullCalendar.Calendar(
+  document.getElementById('calendar'),
+  {
+    locale: 'es',
+    initialView: 'dayGridMonth',
+
+    slotMinTime: '07:00:00',
+    slotMaxTime: '23:00:00',
+    slotDuration: '00:30:00',
+
+    dateClick(info) {
+      if (calendar.view.type === 'dayGridMonth') {
+        activeDay = info.date;
+        rangeStart = null;
+
+        if (tempStartEvent) {
+          tempStartEvent.remove();
+          tempStartEvent = null;
+        }
+
+        calendar.changeView('timeGridDay', info.date);
+        return;
+      }
+
+      const clickedTime = info.date;
+
+      if (!rangeStart) {
+        rangeStart = clickedTime;
+
+        tempStartEvent = calendar.addEvent({
+          start: clickedTime,
+          end: new Date(clickedTime.getTime() + 30 * 60000),
+          backgroundColor: '#f39c12',
+          borderColor: '#d68910'
+        });
+        return;
+      }
+
+      let start = rangeStart < clickedTime ? rangeStart : clickedTime;
+      let end = rangeStart > clickedTime ? rangeStart : clickedTime;
+
+      if (tempStartEvent) {
+        tempStartEvent.remove();
+        tempStartEvent = null;
+      }
+
+      while (start < end) {
+        const slotEnd = new Date(start.getTime() + 30 * 60000);
+
+        calendar.addEvent({
+          start: new Date(start),
+          end: slotEnd,
+          backgroundColor: '#27ae60',
+          borderColor: '#1e8449'
+        });
+
+        start = slotEnd;
+      }
+
+      rangeStart = null;
+    },
+
+    datesSet(info) {
+      const saveBtn = document.getElementById('saveBtn');
+      const backBtn = document.getElementById('backBtn');
+      const confirmBtn = document.getElementById('confirmBtn');
+
+      if (info.view.type === 'timeGridDay') {
+        saveBtn.style.display = 'inline-block';
+        backBtn.style.display = 'inline-block';
+        confirmBtn.style.display = 'none';
+      } else {
+        saveBtn.style.display = 'none';
+        backBtn.style.display = 'none';
+        confirmBtn.style.display = 'inline-block';
+      }
+    },
+
+    eventDidMount(info) {
+      const dayCell = info.el.closest('.fc-daygrid-day');
+      if (dayCell) {
+        dayCell.classList.add('has-event');
+      }
+    }
+  }
+);
 
   async function checkSession() {
     const { data: { user } } = await supabaseClient.auth.getUser();
@@ -223,6 +305,7 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 </body>
 </html>
+
 
 
 
