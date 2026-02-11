@@ -111,6 +111,12 @@
   <button id="finalConfirmBtn">¡Confirmar!</button>
 
 </div>
+const MES_ESTADO = {
+  ABIERTO: 'ABIERTO',
+  BLOQUEADO: 'BLOQUEADO'
+};
+
+const DIAS_MIN_CANCELACION = 3;
 <script>
     const supabaseUrl = 'https://ozteuislgcnuloivagyn.supabase.co'
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im96dGV1aXNsZ2NudWxvaXZhZ3luIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkzNjE0NjYsImV4cCI6MjA4NDkzNzQ2Nn0.MNp6Y3NdmlVFvjz66MaAoYO3OOdpI5lLb-7CTh8lnwg'
@@ -121,7 +127,7 @@
   );      
   console.log('Supabase client:', window.supabaseClient)
   
-document.addEventListener('DOMContentLoaded', function () {
+document.addtListener('DOMContentLoaded', function () {
 const authBox = document.getElementById('authBox');
 const supabaseClient = window.supabaseClient;
 const app = document.getElementById('app');
@@ -135,9 +141,10 @@ const logoutBtn = document.getElementById('logoutBtn');
 
 let calendar;
 let calendarRendered = false;
+let mesEstado = MES_ESTADO.ABIERTO;
 let activeDay = null;
 let rangeStart = null;
-let tempStartEvent = null;
+let tempStartt = null;
 
 function resetAppState() {
   // Ocultar resumen
@@ -146,21 +153,21 @@ function resetAppState() {
 
   // Limpiar calendario
   if (calendar) {
-    calendar.getEvents().forEach(event => event.remove());
+    calendar.getts().forEach(t => t.remove());
   }
 
   // Resetear estados
   activeDay = null;
   rangeStart = null;
 
-  if (tempStartEvent) {
-    tempStartEvent.remove();
-    tempStartEvent = null;
+  if (tempStartt) {
+    tempStartt.remove();
+    tempStartt = null;
   }
 }
 
   
-loginBtn.addEventListener('click', async () => {
+loginBtn.addtListener('click', async () => {
   const email = emailInput.value;
   const password = passwordInput.value;
 
@@ -209,7 +216,16 @@ logoutBtn.addEventListener('click', async () => {
       slotDuration: '00:30:00',
 
       eventClick(info) {
+        const hoy = new Date();
+        const fechaEvento = info.event.start;
 
+        const diffDias =
+          (fechaEvento - hoy) / (1000 * 60 * 60 * 24);
+
+        if (diffDias < DIAS_MIN_CANCELACION) {
+          alert('No se puede modificar con menos de 3 días');
+          return;
+        }
         // ⛔ no borrar el marcador naranja
         if (info.event === tempStartEvent) return;
 
@@ -219,6 +235,10 @@ logoutBtn.addEventListener('click', async () => {
 
       dateClick(info) {
         // 📅 Vista mes → entrar a día
+        if (mesEstado === MES_ESTADO.BLOQUEADO) {
+          alert('Este mes está bloqueado. No se puede editar.');
+          return;
+        }
         if (calendar.view.type === 'dayGridMonth') {
           activeDay = info.date;
           rangeStart = null;
@@ -313,6 +333,12 @@ logoutBtn.addEventListener('click', async () => {
   const { data: { user } } = await supabaseClient.auth.getUser();
 
   if (user) {
+    const hoy = new Date();
+
+    if (hoy.getDate() === 1) {
+      mesEstado = MES_ESTADO.ABIERTO;
+      console.log('📅 Mes reabierto automáticamente');
+}
     authStatus.textContent = `Logueado como ${user.email}`;
     authBox.style.display = 'none';   // 👈 OCULTAR LOGIN
     app.style.display = 'block';      // 👈 MOSTRAR APP
@@ -340,7 +366,13 @@ logoutBtn.addEventListener('click', async () => {
   }
 }
 document.getElementById('finalConfirmBtn').addEventListener('click', async () => {
-   const { data: { user }, error: userError } =
+  if (mesEstado !== MES_ESTADO.ABIERTO) {
+    alert('El mes ya está confirmado y bloqueado');
+    return;
+  }
+  mesEstado = MES_ESTADO.BLOQUEADO;
+    alert('Mes confirmado. Edición bloqueada 🔒');
+  const { data: { user }, error: userError } =
     await supabaseClient.auth.getUser();
 
   if (userError || !user) {
@@ -374,6 +406,7 @@ document.getElementById('finalConfirmBtn').addEventListener('click', async () =>
   }
 
   alert('Horarios guardados correctamente ✅');
+  console.log('🔔 Notificar a los demás usuarios del cambio');
 });
   // ✅ OK → guardar
   document.getElementById('saveBtn').addEventListener('click', () => {
@@ -466,6 +499,7 @@ checkSession();
 
 </body>
 </html>
+
 
 
 
