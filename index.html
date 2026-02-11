@@ -112,48 +112,271 @@
 
 </div>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+    const supabaseUrl = 'https://ozteuislgcnuloivagyn.supabase.co'
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im96dGV1aXNsZ2NudWxvaXZhZ3luIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkzNjE0NjYsImV4cCI6MjA4NDkzNzQ2Nn0.MNp6Y3NdmlVFvjz66MaAoYO3OOdpI5lLb-7CTh8lnwg'
 
-  const MES_ESTADO = {
-    ABIERTO: 'ABIERTO',
-    BLOQUEADO: 'BLOQUEADO'
-  };
-
-  const DIAS_MIN_CANCELACION = 3;
-
-  const supabaseUrl = 'https://ozteuislgcnuloivagyn.supabase.co';
-  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im96dGV1aXNsZ2NudWxvaXZhZ3luIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkzNjE0NjYsImV4cCI6MjA4NDkzNzQ2Nn0.MNp6Y3NdmlVFvjz66MaAoYO3OOdpI5lLb-7CTh8lnwg';
-
-  const supabaseClient = supabase.createClient(
+  window.supabaseClient = window.supabase.createClient(
     supabaseUrl,
     supabaseKey
+  );      
+  console.log('Supabase client:', window.supabaseClient)
+  
+document.addEventListener('DOMContentLoaded', function () {
+const authBox = document.getElementById('authBox');
+const supabaseClient = window.supabaseClient;
+const app = document.getElementById('app');
+  
+const emailInput = document.getElementById('email');
+const passwordInput = document.getElementById('password');
+const authStatus = document.getElementById('authStatus');
+const loginBtn = document.getElementById('loginBtn');
+const registerBtn = document.getElementById('registerBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+
+let calendar;
+let calendarRendered = false;
+let activeDay = null;
+let rangeStart = null;
+let tempStartEvent = null;
+
+function resetAppState() {
+  // Ocultar resumen
+  document.getElementById('summary').style.display = 'none';
+  document.getElementById('summaryText').textContent = '';
+
+  // Limpiar calendario
+  if (calendar) {
+    calendar.getEvents().forEach(event => event.remove());
+  }
+
+  // Resetear estados
+  activeDay = null;
+  rangeStart = null;
+
+  if (tempStartEvent) {
+    tempStartEvent.remove();
+    tempStartEvent = null;
+  }
+}
+
+  
+loginBtn.addEventListener('click', async () => {
+  const email = emailInput.value;
+  const password = passwordInput.value;
+
+  const { error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) {
+    authStatus.textContent = error.message;
+  } else {
+    authStatus.textContent = 'Sesión iniciada ✅';
+    checkSession();
+  }
+});
+
+registerBtn.addEventListener('click', async () => {
+  const email = emailInput.value;
+  const password = passwordInput.value;
+
+  const { error } = await supabaseClient.auth.signUp({
+    email,
+    password
+  });
+
+  if (error) {
+    authStatus.textContent = error.message;
+  } else {
+    authStatus.textContent = 'Usuario registrado ✅ (revisa tu email si hay confirmación)';
+  }
+});
+
+logoutBtn.addEventListener('click', async () => {
+  await supabaseClient.auth.signOut();
+  resetAppState();
+  checkSession();
+});
+  calendar = new FullCalendar.Calendar(
+    document.getElementById('calendar'),
+    {
+      locale: 'es',
+      initialView: 'dayGridMonth',
+
+      slotMinTime: '07:00:00',
+      slotMaxTime: '23:00:00',
+      slotDuration: '00:30:00',
+
+      eventClick(info) {
+
+        // ⛔ no borrar el marcador naranja
+        if (info.event === tempStartEvent) return;
+
+        // ❌ borrar evento verde
+        info.event.remove();
+      },
+
+      dateClick(info) {
+        // 📅 Vista mes → entrar a día
+        if (calendar.view.type === 'dayGridMonth') {
+          activeDay = info.date;
+          rangeStart = null;
+
+          if (tempStartEvent) {
+            tempStartEvent.remove();
+            tempStartEvent = null;
+          }
+
+          calendar.changeView('timeGridDay', info.date);
+          return;
+        }
+
+        // ⏰ Vista día
+        const clickedTime = info.date;
+
+        // Si toca un evento existente → borrar ese bloque
+        const existing = calendar.getEvents().find(e =>
+          e.start.getTime() === clickedTime.getTime() &&
+          e !== tempStartEvent
+        );
+        if (existing) {
+          existing.remove();
+          return;
+        }
+
+        // 🟧 PRIMER TAP → marcar inicio en naranja
+        if (!rangeStart) {
+          rangeStart = clickedTime;
+
+          tempStartEvent = calendar.addEvent({
+            start: clickedTime,
+            end: new Date(clickedTime.getTime() + 30 * 60000),
+            backgroundColor: '#f39c12',
+            borderColor: '#d68910'
+          });
+
+          return;
+        }
+
+        // 🟩 SEGUNDO TAP → crear rango definitivo
+        let start = rangeStart < clickedTime ? rangeStart : clickedTime;
+        let end = rangeStart > clickedTime ? rangeStart : clickedTime;
+
+        // borrar marcador naranja
+        if (tempStartEvent) {
+          tempStartEvent.remove();
+          tempStartEvent = null;
+        }
+
+        while (start < end) {
+          const slotEnd = new Date(start.getTime() + 30 * 60000);
+
+          calendar.addEvent({
+            start: new Date(start),
+            end: slotEnd,
+            backgroundColor: '#27ae60',
+            borderColor: '#1e8449'
+          });
+
+          start = slotEnd;
+        }
+
+        rangeStart = null;
+      },
+
+      datesSet(info) {
+        const saveBtn = document.getElementById('saveBtn');
+        const backBtn = document.getElementById('backBtn');
+        const confirmBtn = document.getElementById('confirmBtn');
+
+        if (info.view.type === 'timeGridDay') {
+          saveBtn.style.display = 'inline-block';
+          backBtn.style.display = 'inline-block';
+          confirmBtn.style.display = 'none';
+        } else {
+          saveBtn.style.display = 'none';
+          backBtn.style.display = 'none';
+          confirmBtn.style.display = 'inline-block';
+        }
+      },
+
+      eventDidMount(info) {
+        const dayCell = info.el.closest('.fc-daygrid-day');
+        if (dayCell) {
+          dayCell.classList.add('has-event');
+        }
+      }
+    }
   );
+  async function checkSession() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
 
-  const authBox = document.getElementById('authBox');
-  const app = document.getElementById('app');
+  if (user) {
+    authStatus.textContent = `Logueado como ${user.email}`;
+    authBox.style.display = 'none';   // 👈 OCULTAR LOGIN
+    app.style.display = 'block';      // 👈 MOSTRAR APP
+    loginBtn.style.display = 'none';
+    registerBtn.style.display = 'none';
+    logoutBtn.style.display = 'inline-block';
 
-  const emailInput = document.getElementById('email');
-  const passwordInput = document.getElementById('password');
-  const authStatus = document.getElementById('authStatus');
-  const loginBtn = document.getElementById('loginBtn');
-  const registerBtn = document.getElementById('registerBtn');
-  const logoutBtn = document.getElementById('logoutBtn');
+    app.style.display = 'block';
 
-  let calendar;
-  let calendarRendered = false;
-  let mesEstado = MES_ESTADO.ABIERTO;
-  let activeDay = null;
-  let rangeStart = null;
-  let tempStartEvent = null;
-
-  function resetAppState() {
-    document.getElementById('summary').style.display = 'none';
-    document.getElementById('summaryText').textContent = '';
-
-    if (calendar) {
-      calendar.getEvents().forEach(e => e.remove());
+    // 👇 renderizar solo una vez
+    if (!calendarRendered) {
+      calendar.render();
+      calendarRendered = true;
     }
 
+  } else {
+    authStatus.textContent = 'No hay sesión activa';
+    authBox.style.display = 'block';
+     app.style.display = 'none';        // 👈 OCULTAR APP
+    loginBtn.style.display = 'inline-block';
+    registerBtn.style.display = 'inline-block';
+    logoutBtn.style.display = 'none';
+    resetAppState();
+    
+  }
+}
+document.getElementById('finalConfirmBtn').addEventListener('click', async () => {
+   const { data: { user }, error: userError } =
+    await supabaseClient.auth.getUser();
+
+  if (userError || !user) {
+    alert('No hay usuario logueado');
+    return;
+  }
+
+  const USER_ID = user.id;
+
+  const events = calendar.getEvents().filter(e => e !== tempStartEvent);
+
+  if (events.length === 0) {
+    alert('No hay horarios para guardar');
+    return;
+  }
+
+  const rows = events.map(e => ({
+    user_id: USER_ID,
+    slot_start: e.start.toISOString(),
+    slot_end: e.end.toISOString()
+  }));
+
+  const { error } = await supabaseClient
+    .from('availability')
+    .insert(rows);
+
+  if (error) {
+    console.error(error);
+    alert('Error al guardar horarios');
+    return;
+  }
+
+  alert('Horarios guardados correctamente ✅');
+});
+  // ✅ OK → guardar
+  document.getElementById('saveBtn').addEventListener('click', () => {
     activeDay = null;
     rangeStart = null;
 
@@ -161,160 +384,33 @@ document.addEventListener('DOMContentLoaded', function () {
       tempStartEvent.remove();
       tempStartEvent = null;
     }
-  }
 
-  loginBtn.addEventListener('click', async () => {
-    const { error } = await supabaseClient.auth.signInWithPassword({
-      email: emailInput.value,
-      password: passwordInput.value
-    });
-
-    if (error) {
-      authStatus.textContent = error.message;
-    } else {
-      checkSession();
-    }
+    calendar.changeView('dayGridMonth');
   });
 
-  registerBtn.addEventListener('click', async () => {
-    const { error } = await supabaseClient.auth.signUp({
-      email: emailInput.value,
-      password: passwordInput.value
-    });
+  // ❌ Regresar → borrar SOLO eventos del día activo
+  document.getElementById('backBtn').addEventListener('click', () => {
 
-    authStatus.textContent = error
-      ? error.message
-      : 'Usuario registrado ✅';
-  });
-
-  logoutBtn.addEventListener('click', async () => {
-    await supabaseClient.auth.signOut();
-    resetAppState();
-    checkSession();
-  });
-
- calendar = new FullCalendar.Calendar(
-  document.getElementById('calendar'),
-  {
-    locale: 'es',
-    initialView: 'dayGridMonth',
-
-    slotMinTime: '07:00:00',
-    slotMaxTime: '23:00:00',
-    slotDuration: '00:30:00',
-
-    dateClick(info) {
-      if (calendar.view.type === 'dayGridMonth') {
-        activeDay = info.date;
-        rangeStart = null;
-
-        if (tempStartEvent) {
-          tempStartEvent.remove();
-          tempStartEvent = null;
+    if (activeDay) {
+      calendar.getEvents().forEach(event => {
+        if (event.start.toDateString() === activeDay.toDateString()) {
+          event.remove();
         }
-
-        calendar.changeView('timeGridDay', info.date);
-        return;
-      }
-
-      const clickedTime = info.date;
-
-      if (!rangeStart) {
-        rangeStart = clickedTime;
-
-        tempStartEvent = calendar.addEvent({
-          start: clickedTime,
-          end: new Date(clickedTime.getTime() + 30 * 60000),
-          backgroundColor: '#f39c12',
-          borderColor: '#d68910'
-        });
-        return;
-      }
-
-      let start = rangeStart < clickedTime ? rangeStart : clickedTime;
-      let end = rangeStart > clickedTime ? rangeStart : clickedTime;
-
-      if (tempStartEvent) {
-        tempStartEvent.remove();
-        tempStartEvent = null;
-      }
-
-      while (start < end) {
-        const slotEnd = new Date(start.getTime() + 30 * 60000);
-
-        calendar.addEvent({
-          start: new Date(start),
-          end: slotEnd,
-          backgroundColor: '#27ae60',
-          borderColor: '#1e8449'
-        });
-
-        start = slotEnd;
-      }
-
-      rangeStart = null;
-    },
-
-    datesSet(info) {
-      const saveBtn = document.getElementById('saveBtn');
-      const backBtn = document.getElementById('backBtn');
-      const confirmBtn = document.getElementById('confirmBtn');
-
-      if (info.view.type === 'timeGridDay') {
-        saveBtn.style.display = 'inline-block';
-        backBtn.style.display = 'inline-block';
-        confirmBtn.style.display = 'none';
-      } else {
-        saveBtn.style.display = 'none';
-        backBtn.style.display = 'none';
-        confirmBtn.style.display = 'inline-block';
-      }
-    },
-
-    eventDidMount(info) {
-      const dayCell = info.el.closest('.fc-daygrid-day');
-      if (dayCell) {
-        dayCell.classList.add('has-event');
-      }
+      });
     }
-  }
-);
-// ✅ OK → volver al mes
-document.getElementById('saveBtn').addEventListener('click', () => {
-  activeDay = null;
-  rangeStart = null;
 
-  if (tempStartEvent) {
-    tempStartEvent.remove();
-    tempStartEvent = null;
-  }
+    rangeStart = null;
 
-  calendar.changeView('dayGridMonth');
-});
+    if (tempStartEvent) {
+      tempStartEvent.remove();
+      tempStartEvent = null;
+    }
 
-// ❌ Regresar → borrar SOLO el día activo
-document.getElementById('backBtn').addEventListener('click', () => {
-  if (activeDay) {
-    calendar.getEvents().forEach(event => {
-      if (event.start.toDateString() === activeDay.toDateString()) {
-        event.remove();
-      }
-    });
-  }
+    activeDay = null;
+    calendar.changeView('dayGridMonth');
+  });
+  document.getElementById('confirmBtn').addEventListener('click', () => {
 
-  rangeStart = null;
-
-  if (tempStartEvent) {
-    tempStartEvent.remove();
-    tempStartEvent = null;
-  }
-
-  activeDay = null;
-  calendar.changeView('dayGridMonth');
-});
-
-// 📋 Aceptar → mostrar resumen
-document.getElementById('confirmBtn').addEventListener('click', () => {
   const events = calendar.getEvents().filter(e => e !== tempStartEvent);
 
   if (events.length === 0) {
@@ -326,7 +422,11 @@ document.getElementById('confirmBtn').addEventListener('click', () => {
 
   events.forEach(event => {
     const dateKey = event.start.toISOString().split('T')[0];
-    if (!grouped[dateKey]) grouped[dateKey] = [];
+
+    if (!grouped[dateKey]) {
+      grouped[dateKey] = [];
+    }
+
     grouped[dateKey].push(event.start);
   });
 
@@ -334,7 +434,11 @@ document.getElementById('confirmBtn').addEventListener('click', () => {
 
   Object.keys(grouped).sort().forEach(dateKey => {
     const date = new Date(dateKey + 'T00:00:00');
-    const dayName = date.toLocaleDateString('es-ES', { weekday: 'long' });
+
+    const dayName = date.toLocaleDateString('es-ES', {
+      weekday: 'long'
+    });
+
     const dateLabel = date.toLocaleDateString('es-ES');
 
     output += `📅 ${dayName} ${dateLabel}\n`;
@@ -352,34 +456,17 @@ document.getElementById('confirmBtn').addEventListener('click', () => {
     output += '\n';
   });
 
-  document.getElementById('summaryText').textContent = output;
-  document.getElementById('summary').style.display = 'block';
+document.getElementById('summaryText').textContent = output;
+document.getElementById('summary').style.display = 'block';
+
 });
-  async function checkSession() {
-    const { data: { user } } = await supabaseClient.auth.getUser();
-
-    if (user) {
-      authBox.style.display = 'none';
-      app.style.display = 'block';
-      logoutBtn.style.display = 'inline-block';
-
-      if (!calendarRendered) {
-        calendar.render();
-        calendarRendered = true;
-      }
-    } else {
-      authBox.style.display = 'block';
-      app.style.display = 'none';
-      logoutBtn.style.display = 'none';
-      resetAppState();
-    }
-  }
-
-  checkSession();
+checkSession();
 });
 </script>
+
 </body>
 </html>
+
 
 
 
