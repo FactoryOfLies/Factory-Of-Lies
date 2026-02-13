@@ -287,16 +287,16 @@ logoutBtn.addEventListener('click', async () => {
 
       datesSet(info) {
         const saveBtn = document.getElementById('saveBtn');
-        const  = document.getElementById('');
+        const backBtn = document.getElementById('backBtn');
         const confirmBtn = document.getElementById('confirmBtn');
 
         if (info.view.type === 'timeGridDay') {
           saveBtn.style.display = 'inline-block';
-          .style.display = 'inline-block';
+          backBtn.style.display = 'inline-block';
           confirmBtn.style.display = 'none';
         } else {
           saveBtn.style.display = 'none';
-          .style.display = 'none';
+          backBtn.style.display = 'none';
           confirmBtn.style.display = 'inline-block';
         }
       },
@@ -339,7 +339,42 @@ logoutBtn.addEventListener('click', async () => {
     
   }
 }
+document.getElementById('finalConfirmBtn').addEventListener('click', async () => {
+   const { data: { user }, error: userError } =
+    await supabaseClient.auth.getUser();
 
+  if (userError || !user) {
+    alert('No hay usuario logueado');
+    return;
+  }
+
+  const USER_ID = user.id;
+
+  const events = calendar.getEvents().filter(e => e !== tempStartEvent);
+
+  if (events.length === 0) {
+    alert('No hay horarios para guardar');
+    return;
+  }
+
+  const rows = events.map(e => ({
+    user_id: USER_ID,
+    slot_start: e.start.toISOString(),
+    slot_end: e.end.toISOString()
+  }));
+
+  const { error } = await supabaseClient
+    .from('availability')
+    .insert(rows);
+
+  if (error) {
+    console.error(error);
+    alert('Error al guardar horarios');
+    return;
+  }
+
+  alert('Horarios guardados correctamente ✅');
+});
   // ✅ OK → guardar
   document.getElementById('saveBtn').addEventListener('click', () => {
     activeDay = null;
@@ -379,195 +414,52 @@ logoutBtn.addEventListener('click', async () => {
   const events = calendar.getEvents().filter(e => e !== tempStartEvent);
 
   if (events.length === 0) {
-    alert('Selecciona al menos un horario');
+    alert('No hay horarios seleccionados');
     return;
   }
 
-  // Construir resumen
+  const grouped = {};
+
+  events.forEach(event => {
+    const dateKey = event.start.toISOString().split('T')[0];
+
+    if (!grouped[dateKey]) {
+      grouped[dateKey] = [];
+    }
+
+    grouped[dateKey].push(event.start);
+  });
+
   let output = '';
 
-  events.forEach(e => {
-    const date = e.start.toLocaleDateString('es-ES');
-    const start = e.start.toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'});
-    const end = e.end.toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'});
+  Object.keys(grouped).sort().forEach(dateKey => {
+    const date = new Date(dateKey + 'T00:00:00');
 
-    output += `📅 ${date} | ${start} - ${end}\n`;
-  });
-
-  document.getElementById('summaryText').textContent = output;
-
-  // Ocultar calendario
-  document.getElementById('app').style.display = 'none';
-
-  // Mostrar resumen
-  document.getElementById('summary').style.display = 'block';
-});
-  document.getElementById('finalConfirmBtn').addEventListener('click', async () => {
-
-  const { data: { user }, error: userError } =
-    await supabaseClient.auth.getUser();
-
-  if (userError || !user) {
-    alert('No hay usuario logueado');
-    return;
-  }
-
-  const USER_ID = user.id;
-
-  const events = calendar.getEvents().filter(e => e !== tempStartEvent);
-
-  if (events.length === 0) {
-    alert('No hay horarios para guardar');
-    return;
-  }
-
-  // 1️⃣ Guardar availability
-  const rows = events.map(e => ({
-    user_id: USER_ID,
-    slot_start: e.start.toISOString(),
-    slot_end: e.end.toISOString()
-  }));
-
-  const { error: insertError } = await supabaseClient
-    .from('availability')
-    .insert(rows);
-
-  if (insertError) {
-    console.error(insertError);
-    alert('Error al guardar horarios');
-    return;
-  }
-
-  // 2️⃣ Marcar usuario como confirmado
-  const { error: confirmError } = await supabaseClient
-    .from('monthly_confirmations')
-    .upsert({ user_id: USER_ID });
-
-  if (confirmError) {
-    console.error(confirmError);
-    alert('Error al confirmar');
-    return;
-  }
-
-  // 3️⃣ Contar total usuarios
-  const { data: allAvailability, error: fetchError } = await supabaseClient
-  .from('availability')
-  .select('user_id');
-
-if (fetchError || !allAvailability) {
-  alert('Error al verificar usuarios');
-  return;
-}
-
-const totalUsers = [...new Set(allAvailability.map(d => d.user_id))].length;
-  // 4️⃣ Contar confirmados
-  const { data: confirmedUsers } = await supabaseClient
-    .from('monthly_confirmations')
-    .select('user_id');
-
-  const totalConfirmed = confirmedUsers.length;
-
-  // 5️⃣ Si todos confirmaron → calcular
-  if (totalConfirmed === totalUsers) {
-
-    await calculateCommonAvailability();
-
-  } else {
-    alert(`Confirmado ✅ Esperando a los demás (${totalConfirmed}/${totalUsers})`);
-  }
-
-});
-  async function calculateCommonAvailability() {
-
-  const { data, error } = await supabaseClient
-    .from('availability')
-    .select('*');
-
-  if (error || !data) {
-    alert('Error al calcular coincidencias');
-    return;
-  }
-
-  const users = [...new Set(data.map(d => d.user_id))];
-  const totalUsers = users.length;
-
-  const byDate = {};
-
-  data.forEach(row => {
-    const dateKey = row.slot_start.split('T')[0];
-    if (!byDate[dateKey]) byDate[dateKey] = [];
-    byDate[dateKey].push(row);
-  });
-
-  let results = [];
-
-  Object.keys(byDate).forEach(date => {
-
-    const slotMap = {};
-
-    byDate[date].forEach(slot => {
-      if (!slotMap[slot.slot_start]) {
-        slotMap[slot.slot_start] = new Set();
-      }
-      slotMap[slot.slot_start].add(slot.user_id);
+    const dayName = date.toLocaleDateString('es-ES', {
+      weekday: 'long'
     });
 
-    const commonSlots = Object.keys(slotMap)
-      .filter(time => slotMap[time].size === totalUsers)
-      .sort();
+    const dateLabel = date.toLocaleDateString('es-ES');
 
-    let sequence = [];
+    output += `📅 ${dayName} ${dateLabel}\n`;
 
-    for (let i = 0; i < commonSlots.length; i++) {
+    grouped[dateKey]
+      .sort((a, b) => a - b)
+      .forEach(time => {
+        const hour = time.toLocaleTimeString('es-ES', {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        output += `   ⏰ ${hour}\n`;
+      });
 
-      const current = new Date(commonSlots[i]);
-
-      if (sequence.length === 0) {
-        sequence.push(current);
-        continue;
-      }
-
-      const prev = sequence[sequence.length - 1];
-      const diff = (current - prev) / (1000 * 60);
-
-      if (diff === 30) {
-        sequence.push(current);
-      } else {
-        if (sequence.length >= 4) {
-          results.push({ date, sequence: [...sequence] });
-        }
-        sequence = [current];
-      }
-    }
-
-    if (sequence.length >= 4) {
-      results.push({ date, sequence: [...sequence] });
-    }
-
+    output += '\n';
   });
 
-  if (results.length === 0) {
-    alert('Todos confirmaron pero no hay 2 horas seguidas en común.');
-    return;
-  }
+document.getElementById('summaryText').textContent = output;
+document.getElementById('summary').style.display = 'block';
 
-  let output = '🎉 BLOQUES EN COMÚN (mínimo 2h)\n\n';
-
-  results.forEach(r => {
-
-    const start = r.sequence[0];
-    const end = new Date(
-      r.sequence[r.sequence.length - 1].getTime() + 30 * 60000
-    );
-
-    output += `📅 ${r.date}\n`;
-    output += `⏰ ${start.toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'})}`;
-    output += ` - ${end.toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'})}\n\n`;
-  });
-
-  alert(output);
-
-}
+});
 checkSession();
 });
 </script>
