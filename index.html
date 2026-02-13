@@ -409,55 +409,73 @@ document.getElementById('finalConfirmBtn').addEventListener('click', async () =>
     activeDay = null;
     calendar.changeView('dayGridMonth');
   });
-  document.getElementById('confirmBtn').addEventListener('click', () => {
+  document.getElementById('finalConfirmBtn').addEventListener('click', async () => {
+
+  const { data: { user }, error: userError } =
+    await supabaseClient.auth.getUser();
+
+  if (userError || !user) {
+    alert('No hay usuario logueado');
+    return;
+  }
+
+  const USER_ID = user.id;
 
   const events = calendar.getEvents().filter(e => e !== tempStartEvent);
 
   if (events.length === 0) {
-    alert('No hay horarios seleccionados');
+    alert('No hay horarios para guardar');
     return;
   }
 
-  const grouped = {};
+  // 1️⃣ Guardar availability
+  const rows = events.map(e => ({
+    user_id: USER_ID,
+    slot_start: e.start.toISOString(),
+    slot_end: e.end.toISOString()
+  }));
 
-  events.forEach(event => {
-    const dateKey = event.start.toISOString().split('T')[0];
+  const { error: insertError } = await supabaseClient
+    .from('availability')
+    .insert(rows);
 
-    if (!grouped[dateKey]) {
-      grouped[dateKey] = [];
-    }
+  if (insertError) {
+    console.error(insertError);
+    alert('Error al guardar horarios');
+    return;
+  }
 
-    grouped[dateKey].push(event.start);
-  });
+  // 2️⃣ Marcar usuario como confirmado
+  const { error: confirmError } = await supabaseClient
+    .from('monthly_confirmations')
+    .upsert({ user_id: USER_ID });
 
-  let output = '';
+  if (confirmError) {
+    console.error(confirmError);
+    alert('Error al confirmar');
+    return;
+  }
 
-  Object.keys(grouped).sort().forEach(dateKey => {
-    const date = new Date(dateKey + 'T00:00:00');
+  // 3️⃣ Contar total usuarios
+  const { data: allUsers } = await supabaseClient.auth.admin.listUsers();
 
-    const dayName = date.toLocaleDateString('es-ES', {
-      weekday: 'long'
-    });
+  const totalUsers = allUsers?.users?.length || 0;
 
-    const dateLabel = date.toLocaleDateString('es-ES');
+  // 4️⃣ Contar confirmados
+  const { data: confirmedUsers } = await supabaseClient
+    .from('monthly_confirmations')
+    .select('user_id');
 
-    output += `📅 ${dayName} ${dateLabel}\n`;
+  const totalConfirmed = confirmedUsers.length;
 
-    grouped[dateKey]
-      .sort((a, b) => a - b)
-      .forEach(time => {
-        const hour = time.toLocaleTimeString('es-ES', {
-          hour: '2-digit',
-          minute: '2-digit'
-        });
-        output += `   ⏰ ${hour}\n`;
-      });
+  // 5️⃣ Si todos confirmaron → calcular
+  if (totalConfirmed === totalUsers) {
 
-    output += '\n';
-  });
+    await calculateCommonAvailability();
 
-document.getElementById('summaryText').textContent = output;
-document.getElementById('summary').style.display = 'block';
+  } else {
+    alert(`Confirmado ✅ Esperando a los demás (${totalConfirmed}/${totalUsers})`);
+  }
 
 });
 checkSession();
@@ -466,6 +484,7 @@ checkSession();
 
 </body>
 </html>
+
 
 
 
