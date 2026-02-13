@@ -339,42 +339,7 @@ logoutBtn.addEventListener('click', async () => {
     
   }
 }
-document.getElementById('finalConfirmBtn').addEventListener('click', async () => {
-   const { data: { user }, error: userError } =
-    await supabaseClient.auth.getUser();
 
-  if (userError || !user) {
-    alert('No hay usuario logueado');
-    return;
-  }
-
-  const USER_ID = user.id;
-
-  const events = calendar.getEvents().filter(e => e !== tempStartEvent);
-
-  if (events.length === 0) {
-    alert('No hay horarios para guardar');
-    return;
-  }
-
-  const rows = events.map(e => ({
-    user_id: USER_ID,
-    slot_start: e.start.toISOString(),
-    slot_end: e.end.toISOString()
-  }));
-
-  const { error } = await supabaseClient
-    .from('availability')
-    .insert(rows);
-
-  if (error) {
-    console.error(error);
-    alert('Error al guardar horarios');
-    return;
-  }
-
-  alert('Horarios guardados correctamente ✅');
-});
   // ✅ OK → guardar
   document.getElementById('saveBtn').addEventListener('click', () => {
     activeDay = null;
@@ -457,7 +422,16 @@ document.getElementById('finalConfirmBtn').addEventListener('click', async () =>
   }
 
   // 3️⃣ Contar total usuarios
-  const totalUsers = [...new Set(data.map(d => d.user_id))].length;
+  const { data: allAvailability, error: fetchError } = await supabaseClient
+  .from('availability')
+  .select('user_id');
+
+if (fetchError || !allAvailability) {
+  alert('Error al verificar usuarios');
+  return;
+}
+
+const totalUsers = [...new Set(allAvailability.map(d => d.user_id))].length;
   // 4️⃣ Contar confirmados
   const { data: confirmedUsers } = await supabaseClient
     .from('monthly_confirmations')
@@ -572,6 +546,7 @@ checkSession();
 
 </body>
 </html>
+
 
 
 
