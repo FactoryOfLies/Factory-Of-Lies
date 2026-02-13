@@ -287,16 +287,16 @@ logoutBtn.addEventListener('click', async () => {
 
       datesSet(info) {
         const saveBtn = document.getElementById('saveBtn');
-        const backBtn = document.getElementById('backBtn');
+        const  = document.getElementById('');
         const confirmBtn = document.getElementById('confirmBtn');
 
         if (info.view.type === 'timeGridDay') {
           saveBtn.style.display = 'inline-block';
-          backBtn.style.display = 'inline-block';
+          .style.display = 'inline-block';
           confirmBtn.style.display = 'none';
         } else {
           saveBtn.style.display = 'none';
-          backBtn.style.display = 'none';
+          .style.display = 'none';
           confirmBtn.style.display = 'inline-block';
         }
       },
@@ -374,6 +374,34 @@ logoutBtn.addEventListener('click', async () => {
     activeDay = null;
     calendar.changeView('dayGridMonth');
   });
+  document.getElementById('confirmBtn').addEventListener('click', () => {
+
+  const events = calendar.getEvents().filter(e => e !== tempStartEvent);
+
+  if (events.length === 0) {
+    alert('Selecciona al menos un horario');
+    return;
+  }
+
+  // Construir resumen
+  let output = '';
+
+  events.forEach(e => {
+    const date = e.start.toLocaleDateString('es-ES');
+    const start = e.start.toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'});
+    const end = e.end.toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'});
+
+    output += `📅 ${date} | ${start} - ${end}\n`;
+  });
+
+  document.getElementById('summaryText').textContent = output;
+
+  // Ocultar calendario
+  document.getElementById('app').style.display = 'none';
+
+  // Mostrar resumen
+  document.getElementById('summary').style.display = 'block';
+});
   document.getElementById('finalConfirmBtn').addEventListener('click', async () => {
 
   const { data: { user }, error: userError } =
@@ -546,6 +574,7 @@ checkSession();
 
 </body>
 </html>
+
 
 
 
