@@ -457,10 +457,7 @@ document.getElementById('finalConfirmBtn').addEventListener('click', async () =>
   }
 
   // 3️⃣ Contar total usuarios
-  const { data: allUsers } = await supabaseClient.auth.admin.listUsers();
-
-  const totalUsers = allUsers?.users?.length || 0;
-
+  const totalUsers = [...new Set(data.map(d => d.user_id))].length;
   // 4️⃣ Contar confirmados
   const { data: confirmedUsers } = await supabaseClient
     .from('monthly_confirmations')
@@ -478,12 +475,104 @@ document.getElementById('finalConfirmBtn').addEventListener('click', async () =>
   }
 
 });
+  async function calculateCommonAvailability() {
+
+  const { data, error } = await supabaseClient
+    .from('availability')
+    .select('*');
+
+  if (error || !data) {
+    alert('Error al calcular coincidencias');
+    return;
+  }
+
+  const users = [...new Set(data.map(d => d.user_id))];
+  const totalUsers = users.length;
+
+  const byDate = {};
+
+  data.forEach(row => {
+    const dateKey = row.slot_start.split('T')[0];
+    if (!byDate[dateKey]) byDate[dateKey] = [];
+    byDate[dateKey].push(row);
+  });
+
+  let results = [];
+
+  Object.keys(byDate).forEach(date => {
+
+    const slotMap = {};
+
+    byDate[date].forEach(slot => {
+      if (!slotMap[slot.slot_start]) {
+        slotMap[slot.slot_start] = new Set();
+      }
+      slotMap[slot.slot_start].add(slot.user_id);
+    });
+
+    const commonSlots = Object.keys(slotMap)
+      .filter(time => slotMap[time].size === totalUsers)
+      .sort();
+
+    let sequence = [];
+
+    for (let i = 0; i < commonSlots.length; i++) {
+
+      const current = new Date(commonSlots[i]);
+
+      if (sequence.length === 0) {
+        sequence.push(current);
+        continue;
+      }
+
+      const prev = sequence[sequence.length - 1];
+      const diff = (current - prev) / (1000 * 60);
+
+      if (diff === 30) {
+        sequence.push(current);
+      } else {
+        if (sequence.length >= 4) {
+          results.push({ date, sequence: [...sequence] });
+        }
+        sequence = [current];
+      }
+    }
+
+    if (sequence.length >= 4) {
+      results.push({ date, sequence: [...sequence] });
+    }
+
+  });
+
+  if (results.length === 0) {
+    alert('Todos confirmaron pero no hay 2 horas seguidas en común.');
+    return;
+  }
+
+  let output = '🎉 BLOQUES EN COMÚN (mínimo 2h)\n\n';
+
+  results.forEach(r => {
+
+    const start = r.sequence[0];
+    const end = new Date(
+      r.sequence[r.sequence.length - 1].getTime() + 30 * 60000
+    );
+
+    output += `📅 ${r.date}\n`;
+    output += `⏰ ${start.toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'})}`;
+    output += ` - ${end.toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'})}\n\n`;
+  });
+
+  alert(output);
+
+}
 checkSession();
 });
 </script>
 
 </body>
 </html>
+
 
 
 
